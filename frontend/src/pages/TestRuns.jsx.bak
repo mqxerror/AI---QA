@@ -1,0 +1,1130 @@
+import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { getTestRuns, generateReport } from '../services/api'
+import { ChevronDown, ChevronRight, RefreshCw, Activity } from 'lucide-react'
+import {
+  AnimatedCounter,
+  TextGenerateEffect,
+  ScrollReveal,
+  FadeText,
+  FlipWords
+} from '../components/ui'
+import { useTestResultUpdates } from '../hooks/useRealtimeUpdates'
+import TestRunModal from '../components/TestRunModal'
+
+// Reports are on MinIO - open directly (no proxy needed)
+function getReportUrl(reportUrl) {
+  // Just return the original MinIO URL
+  return reportUrl;
+}
+
+function TestRuns() {
+  const [expandedWebsites, setExpandedWebsites] = useState(new Set())
+  const [filter, setFilter] = useState('all') // all, Smoke, Performance, Load Test, Accessibility, Pixel Audit
+  const [selectedTestRunId, setSelectedTestRunId] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalInitialData, setModalInitialData] = useState(null)
+  const queryClient = useQueryClient()
+
+  const toggleWebsite = (websiteName) => {
+    setExpandedWebsites(prev => {
+      const next = new Set(prev)
+      if (next.has(websiteName)) {
+        next.delete(websiteName)
+      } else {
+        next.add(websiteName)
+      }
+      return next
+    })
+  }
+
+  const handleOpenTestModal = (run) => {
+    setSelectedTestRunId(run.id)
+    setModalInitialData(run)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseTestModal = () => {
+    setIsModalOpen(false)
+    setSelectedTestRunId(null)
+    setModalInitialData(null)
+  }
+
+  // Real-time updates when new test results arrive
+  useTestResultUpdates(() => {
+    queryClient.invalidateQueries(['test-runs'])
+  }, [])
+
+  const { data: runs, isLoading, refetch } = useQuery({
+    queryKey: ['test-runs'],
+    queryFn: () => getTestRuns({ limit: 100 }).then(res => res.data),
+    refetchInterval: 5000 // Faster polling
+  })
+
+  if (isLoading) return <div className="loading">Loading...</div>
+
+  // Filter runs by test type
+  const filteredRuns = filter === 'all'
+    ? runs
+    : runs?.filter(run => run.test_type === filter)
+
+  // Group runs by website
+  const groupedByWebsite = filteredRuns?.reduce((acc, run) => {
+    const key = run.website_name
+    if (!acc[key]) {
+      acc[key] = {
+        website_name: run.website_name,
+        website_url: run.website_url,
+        runs: []
+      }
+    }
+    acc[key].runs.push(run)
+    return acc
+  }, {})
+
+  const websiteGroups = Object.values(groupedByWebsite || {}).sort((a, b) =>
+    a.website_name.localeCompare(b.website_name)
+  )
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative', zIndex: 10 }}>
+        <div>
+          <TextGenerateEffect words="Test Runs" className="dashboard-title" />
+          <FadeText direction="right">
+            <p style={{ margin: '8px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
+              Comprehensive test history • <FlipWords words={["View Results", "Track Progress", "Analyze Performance"]} className="inline-flip" />
+            </p>
+          </FadeText>
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="btn btn-secondary"
+          style={{ display: 'flex', alignItems: 'center', gap: '5px' }}
+        >
+          <RefreshCw size={16} />
+          Refresh
+        </button>
+      </div>
+
+      {/* Filter Tabs */}
+      <ScrollReveal delay={0.1} direction="up">
+        <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setFilter('all')}
+            className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ fontSize: '14px', padding: '6px 12px' }}
+          >
+            All (<AnimatedCounter value={runs?.length || 0} />)
+          </button>
+        <button
+          onClick={() => setFilter('Smoke')}
+          className={`btn ${filter === 'Smoke' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ fontSize: '14px', padding: '6px 12px' }}
+        >
+          Smoke (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Smoke').length || 0} />)
+        </button>
+        <button
+          onClick={() => setFilter('Performance')}
+          className={`btn ${filter === 'Performance' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ fontSize: '14px', padding: '6px 12px' }}
+        >
+          Performance (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Performance').length || 0} />)
+        </button>
+        <button
+          onClick={() => setFilter('Load Test')}
+          className={`btn ${filter === 'Load Test' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ fontSize: '14px', padding: '6px 12px' }}
+        >
+          Load (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Load Test').length || 0} />)
+        </button>
+        <button
+          onClick={() => setFilter('Accessibility')}
+          className={`btn ${filter === 'Accessibility' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ fontSize: '14px', padding: '6px 12px' }}
+        >
+          Accessibility (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Accessibility').length || 0} />)
+        </button>
+        <button
+          onClick={() => setFilter('Security Scan')}
+          className={`btn ${filter === 'Security Scan' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ fontSize: '14px', padding: '6px 12px' }}
+        >
+          Security (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Security Scan').length || 0} />)
+        </button>
+        <button
+          onClick={() => setFilter('SEO Audit')}
+          className={`btn ${filter === 'SEO Audit' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ fontSize: '14px', padding: '6px 12px' }}
+        >
+          SEO (<AnimatedCounter value={runs?.filter(r => r.test_type === 'SEO Audit').length || 0} />)
+        </button>
+        <button
+          onClick={() => setFilter('Visual Regression')}
+          className={`btn ${filter === 'Visual Regression' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ fontSize: '14px', padding: '6px 12px' }}
+        >
+          Visual (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Visual Regression').length || 0} />)
+        </button>
+        <button
+          onClick={() => setFilter('Pixel Audit')}
+          className={`btn ${filter === 'Pixel Audit' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ fontSize: '14px', padding: '6px 12px' }}
+        >
+          Pixel Audit (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Pixel Audit').length || 0} />)
+        </button>
+        </div>
+      </ScrollReveal>
+
+      {filteredRuns?.length === 0 ? (
+        <ScrollReveal delay={0.2} direction="up">
+          <div className="card">
+            <div className="empty-state">
+              <div className="empty-state-icon">
+                <Activity size={64} color="#10b981" />
+              </div>
+              <FadeText direction="up">
+                <p>{filter === 'all' ? 'No test runs yet. Run a test from the Websites page.' : `No ${filter} tests found.`}</p>
+              </FadeText>
+            </div>
+          </div>
+        </ScrollReveal>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {websiteGroups.map((group, idx) => {
+            const isExpanded = expandedWebsites.has(group.website_name)
+            const passedTests = group.runs.filter(r => r.status === 'Pass').length
+            const failedTests = group.runs.filter(r => r.status === 'Fail').length
+
+            return (
+              <ScrollReveal key={group.website_name} delay={0.1 * (idx + 1)} direction="up">
+                <div className="card">
+                  {/* Website Header */}
+                <div
+                  onClick={() => toggleWebsite(group.website_name)}
+                  style={{
+                    padding: '20px',
+                    cursor: 'pointer',
+                    borderBottom: isExpanded ? '1px solid #e5e7eb' : 'none',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: isExpanded ? 'linear-gradient(to bottom, #f9fafb, white)' : 'white',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                    {isExpanded ? (
+                      <ChevronDown size={20} style={{ color: '#3b82f6' }} />
+                    ) : (
+                      <ChevronRight size={20} style={{ color: '#6b7280' }} />
+                    )}
+                    <div>
+                      <h3 style={{ fontSize: '18px', fontWeight: '600', margin: '0 0 4px 0' }}>
+                        {group.website_name}
+                      </h3>
+                      <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>
+                        {group.website_url}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <span className="badge badge-info">
+                        {group.runs.length} {group.runs.length === 1 ? 'test' : 'tests'}
+                      </span>
+                      {passedTests > 0 && (
+                        <span className="badge badge-success">{passedTests} passed</span>
+                      )}
+                      {failedTests > 0 && (
+                        <span className="badge badge-danger">{failedTests} failed</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded Test Runs Table */}
+                {isExpanded && (
+                  <table>
+                    <thead>
+                      <tr>
+                        <th style={{ width: '30px' }}></th>
+                        <th>Test Type</th>
+                        <th>Status</th>
+                        <th>Tests</th>
+                        <th>Duration</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {group.runs.map(run => (
+                <>
+                  <tr
+                    key={run.id}
+                    onClick={() => handleOpenTestModal(run)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <td>
+                      <ChevronRight size={16} />
+                    </td>
+                    <td>
+                      <span className="badge badge-info">{run.test_type}</span>
+                    </td>
+                    <td>
+                      <span className={`badge badge-${run.status === 'Pass' ? 'success' : 'danger'}`}>
+                        {run.status}
+                      </span>
+                    </td>
+                    <td>
+                      {run.passed}/{run.total_tests}
+                      {run.failed > 0 && (
+                        <span style={{ color: '#dc2626', marginLeft: '5px' }}>
+                          ({run.failed} failed)
+                        </span>
+                      )}
+                    </td>
+                    <td>{run.duration_ms ? `${(run.duration_ms / 1000).toFixed(2)}s` : '-'}</td>
+                    <td>
+                      <small style={{ color: '#6b7280' }}>
+                        {new Date(run.created_at).toLocaleString()}
+                      </small>
+                    </td>
+                  </tr>
+                  {expandedRun === run.id && runDetails && (
+                    <tr>
+                      <td colSpan="6" style={{ background: '#f9fafb', padding: '20px' }}>
+                        {/* Test Results */}
+                        {runDetails.results && runDetails.results.length > 0 && (
+                          <div style={{ marginBottom: '20px' }}>
+                            <h4 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: '600' }}>
+                              Test Results
+                            </h4>
+                            <table style={{ background: 'white' }}>
+                              <thead>
+                                <tr>
+                                  <th>Test Name</th>
+                                  <th>Category</th>
+                                  <th>Status</th>
+                                  <th>Duration</th>
+                                  <th>Message</th>
+                                  <th>Screenshot</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {runDetails.results.map((result, idx) => (
+                                  <tr key={idx}>
+                                    <td>{result.test_name}</td>
+                                    <td>{result.category}</td>
+                                    <td>
+                                      <span className={`badge badge-${result.status === 'Pass' ? 'success' : 'danger'}`}>
+                                        {result.status}
+                                      </span>
+                                    </td>
+                                    <td>{result.duration_ms}ms</td>
+                                    <td>
+                                      <small style={{ color: result.error_message ? '#dc2626' : '#6b7280' }}>
+                                        {result.error_message || 'OK'}
+                                      </small>
+                                    </td>
+                                    <td>
+                                      {result.screenshot_url && (
+                                        <a
+                                          href={result.screenshot_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          style={{ color: '#2563eb' }}
+                                        >
+                                          <ExternalLink size={14} />
+                                        </a>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {/* Pixel Audit Results */}
+                        {runDetails.pixel_results && runDetails.pixel_results.length > 0 && (
+                          <div style={{ marginBottom: '20px' }}>
+                            <h4 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: '600' }}>
+                              Pixel Audit Results
+                            </h4>
+                            <table style={{ background: 'white' }}>
+                              <thead>
+                                <tr>
+                                  <th>Pixel</th>
+                                  <th>Pixel ID</th>
+                                  <th>Status</th>
+                                  <th>Network Calls</th>
+                                  <th>Events</th>
+                                  <th>Details</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {runDetails.pixel_results.map((pixel, idx) => (
+                                  <tr key={idx}>
+                                    <td><strong>{pixel.pixel_vendor}</strong></td>
+                                    <td>
+                                      <small style={{ color: '#6b7280' }}>
+                                        {pixel.pixel_id || 'N/A'}
+                                      </small>
+                                    </td>
+                                    <td>
+                                      <span className={`badge badge-${pixel.found ? 'success' : 'danger'}`}>
+                                        {pixel.found ? 'Found' : 'Not Found'}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      {pixel.events_detected ? (() => {
+                                        try {
+                                          const events = JSON.parse(pixel.events_detected);
+                                          return events.network_calls || 0;
+                                        } catch {
+                                          return 'N/A';
+                                        }
+                                      })() : 'N/A'}
+                                    </td>
+                                    <td>
+                                      {pixel.events_detected ? (() => {
+                                        try {
+                                          const events = JSON.parse(pixel.events_detected);
+                                          return events.events || 0;
+                                        } catch {
+                                          return 'N/A';
+                                        }
+                                      })() : 'N/A'}
+                                    </td>
+                                    <td>
+                                      {pixel.events_detected ? (() => {
+                                        try {
+                                          const events = JSON.parse(pixel.events_detected);
+                                          return (
+                                            <small style={{ color: '#6b7280' }}>
+                                              {events.script_url ? (
+                                                <a href={events.script_url} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb' }}>
+                                                  View Script
+                                                </a>
+                                              ) : 'N/A'}
+                                            </small>
+                                          );
+                                        } catch {
+                                          return 'N/A';
+                                        }
+                                      })() : pixel.warnings ? (() => {
+                                        try {
+                                          const warnings = JSON.parse(pixel.warnings);
+                                          return <small style={{ color: '#dc2626' }}>{warnings.reason}</small>;
+                                        } catch {
+                                          return 'N/A';
+                                        }
+                                      })() : 'N/A'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {/* Accessibility Results */}
+                        {runDetails.accessibility_results && runDetails.accessibility_results.length > 0 && (
+                          <div style={{ marginBottom: '20px' }}>
+                            <h4 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: '600' }}>
+                              Accessibility Violations
+                            </h4>
+                            <table style={{ background: 'white' }}>
+                              <thead>
+                                <tr>
+                                  <th>Violation</th>
+                                  <th>Impact</th>
+                                  <th>Affected Nodes</th>
+                                  <th>WCAG Tags</th>
+                                  <th>Help</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {runDetails.accessibility_results.map((violation, idx) => (
+                                  <tr key={idx}>
+                                    <td>
+                                      <strong>{violation.violation_id}</strong>
+                                      <br />
+                                      <small style={{ color: '#6b7280' }}>
+                                        {violation.description}
+                                      </small>
+                                    </td>
+                                    <td>
+                                      <span className={`badge badge-${
+                                        violation.impact === 'critical' ? 'danger' :
+                                        violation.impact === 'serious' ? 'warning' :
+                                        violation.impact === 'moderate' ? 'info' : 'secondary'
+                                      }`}>
+                                        {violation.impact}
+                                      </span>
+                                    </td>
+                                    <td>{violation.nodes_affected || 0}</td>
+                                    <td>
+                                      <small style={{ color: '#6b7280' }}>
+                                        {violation.wcag_tags ? (() => {
+                                          try {
+                                            return JSON.parse(violation.wcag_tags).slice(0, 3).join(', ');
+                                          } catch {
+                                            return 'N/A';
+                                          }
+                                        })() : 'N/A'}
+                                      </small>
+                                    </td>
+                                    <td>
+                                      {violation.help_url ? (
+                                        <a
+                                          href={violation.help_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          style={{ color: '#2563eb' }}
+                                        >
+                                          <ExternalLink size={14} />
+                                        </a>
+                                      ) : (
+                                        <small style={{ color: '#6b7280' }}>{violation.help || 'N/A'}</small>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {/* Load Test Results */}
+                        {runDetails.load_results && (
+                          <div style={{ marginBottom: '20px' }}>
+                            <h4 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: '600' }}>
+                              Load Test Results
+                            </h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px' }}>
+                              <div className="stat-card">
+                                <div className="stat-label">Virtual Users</div>
+                                <div className="stat-value" style={{ fontSize: '20px' }}>
+                                  {runDetails.load_results.virtual_users}
+                                </div>
+                              </div>
+                              <div className="stat-card">
+                                <div className="stat-label">Duration</div>
+                                <div className="stat-value" style={{ fontSize: '20px' }}>
+                                  {runDetails.load_results.duration_seconds}s
+                                </div>
+                              </div>
+                              <div className="stat-card">
+                                <div className="stat-label">Total Requests</div>
+                                <div className="stat-value" style={{ fontSize: '20px' }}>
+                                  {runDetails.load_results.requests_total || 'N/A'}
+                                </div>
+                              </div>
+                              <div className="stat-card">
+                                <div className="stat-label">Failed Requests</div>
+                                <div className="stat-value" style={{ fontSize: '20px', color: runDetails.load_results.requests_failed > 0 ? '#dc2626' : '#10b981' }}>
+                                  {runDetails.load_results.requests_failed || 0}
+                                </div>
+                              </div>
+                              {runDetails.load_results.throughput_rps && (
+                                <div className="stat-card">
+                                  <div className="stat-label">Throughput (RPS)</div>
+                                  <div className="stat-value" style={{ fontSize: '20px' }}>
+                                    {runDetails.load_results.throughput_rps.toFixed(1)}
+                                  </div>
+                                </div>
+                              )}
+                              {runDetails.load_results.error_rate != null && (
+                                <div className="stat-card">
+                                  <div className="stat-label">Error Rate</div>
+                                  <div className="stat-value" style={{ fontSize: '20px', color: runDetails.load_results.error_rate > 0 ? '#dc2626' : '#10b981' }}>
+                                    {(runDetails.load_results.error_rate * 100).toFixed(2)}%
+                                  </div>
+                                </div>
+                              )}
+                              {runDetails.load_results.latency_p50 && (
+                                <div className="stat-card">
+                                  <div className="stat-label">P50 Latency</div>
+                                  <div className="stat-value" style={{ fontSize: '20px' }}>
+                                    {runDetails.load_results.latency_p50.toFixed(0)}ms
+                                  </div>
+                                </div>
+                              )}
+                              {runDetails.load_results.latency_p90 && (
+                                <div className="stat-card">
+                                  <div className="stat-label">P90 Latency</div>
+                                  <div className="stat-value" style={{ fontSize: '20px' }}>
+                                    {runDetails.load_results.latency_p90.toFixed(0)}ms
+                                  </div>
+                                </div>
+                              )}
+                              {runDetails.load_results.latency_p95 && (
+                                <div className="stat-card">
+                                  <div className="stat-label">P95 Latency</div>
+                                  <div className="stat-value" style={{ fontSize: '20px' }}>
+                                    {runDetails.load_results.latency_p95.toFixed(0)}ms
+                                  </div>
+                                </div>
+                              )}
+                              {runDetails.load_results.latency_p99 && (
+                                <div className="stat-card">
+                                  <div className="stat-label">P99 Latency</div>
+                                  <div className="stat-value" style={{ fontSize: '20px' }}>
+                                    {runDetails.load_results.latency_p99.toFixed(0)}ms
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Security Scan Results */}
+                        {runDetails.security_results && (
+                          <div style={{ marginBottom: '20px' }}>
+                            <h4 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: '600' }}>
+                              Security Scan Results
+                            </h4>
+
+                            {/* Security Score */}
+                            <div style={{ marginBottom: '15px', display: 'flex', gap: '15px' }}>
+                              <div className="stat-card">
+                                <div className="stat-label">Overall Security Score</div>
+                                <div className="stat-value" style={{
+                                  fontSize: '24px',
+                                  color: runDetails.security_results.overall_score >= 80 ? '#10b981' :
+                                         runDetails.security_results.overall_score >= 60 ? '#f59e0b' : '#ef4444'
+                                }}>
+                                  {runDetails.security_results.overall_score}/100
+                                </div>
+                              </div>
+
+                              {runDetails.security_results.ssl_valid !== null && (
+                                <div className="stat-card">
+                                  <div className="stat-label">SSL Certificate</div>
+                                  <div style={{ fontSize: '16px' }}>
+                                    <span className={`badge badge-${runDetails.security_results.ssl_valid ? 'success' : 'danger'}`}>
+                                      {runDetails.security_results.ssl_valid ? 'Valid' : 'Invalid'}
+                                    </span>
+                                    {runDetails.security_results.ssl_days_remaining && (
+                                      <div style={{ fontSize: '12px', marginTop: '5px', color: '#6b7280' }}>
+                                        Expires in {runDetails.security_results.ssl_days_remaining} days
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Security Violations */}
+                            {runDetails.security_results.violations && (() => {
+                              try {
+                                const violations = JSON.parse(runDetails.security_results.violations);
+                                return violations.length > 0 ? (
+                                  <div>
+                                    <h5 style={{ marginBottom: '10px', fontSize: '13px', fontWeight: '600' }}>
+                                      Violations ({violations.length})
+                                    </h5>
+                                    <table style={{ background: 'white' }}>
+                                      <thead>
+                                        <tr>
+                                          <th>Severity</th>
+                                          <th>Category</th>
+                                          <th>Issue</th>
+                                          <th>Description</th>
+                                          <th>Recommendation</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {violations.slice(0, 10).map((violation, idx) => (
+                                          <tr key={idx}>
+                                            <td>
+                                              <span className={`badge badge-${
+                                                violation.severity === 'critical' ? 'danger' :
+                                                violation.severity === 'high' ? 'warning' :
+                                                violation.severity === 'medium' ? 'info' : 'secondary'
+                                              }`}>
+                                                {violation.severity}
+                                              </span>
+                                            </td>
+                                            <td><small>{violation.category}</small></td>
+                                            <td><strong>{violation.issue}</strong></td>
+                                            <td><small style={{ color: '#6b7280' }}>{violation.description}</small></td>
+                                            <td><small style={{ color: '#6b7280' }}>{violation.recommendation}</small></td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                    {violations.length > 10 && (
+                                      <div style={{ marginTop: '10px', fontSize: '12px', color: '#6b7280' }}>
+                                        Showing 10 of {violations.length} violations
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : null;
+                              } catch {
+                                return null;
+                              }
+                            })()}
+
+                            {/* Security Headers */}
+                            {runDetails.security_results.security_headers && (() => {
+                              try {
+                                const headers = JSON.parse(runDetails.security_results.security_headers);
+                                return (
+                                  <div style={{ marginTop: '15px' }}>
+                                    <h5 style={{ marginBottom: '10px', fontSize: '13px', fontWeight: '600' }}>
+                                      Security Headers
+                                    </h5>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                                      {Object.entries(headers).map(([name, info]) => (
+                                        <div key={name} className="stat-card" style={{ padding: '10px' }}>
+                                          <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '5px' }}>
+                                            {name}
+                                          </div>
+                                          <span className={`badge badge-${info.secure ? 'success' : 'danger'}`}>
+                                            {info.present ? 'Present' : 'Missing'}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              } catch {
+                                return null;
+                              }
+                            })()}
+                          </div>
+                        )}
+
+                        {/* SEO Audit Results */}
+                        {runDetails.seo_results && (() => {
+                          try {
+                            const seo = runDetails.seo_results;
+                            const metaTags = JSON.parse(seo.meta_tags || '{}');
+                            const technical = JSON.parse(seo.technical || '{}');
+                            const headings = JSON.parse(seo.headings || '{}');
+                            const images = JSON.parse(seo.images || '{}');
+                            const issues = JSON.parse(seo.issues || '[]');
+
+                            return (
+                              <div style={{ marginBottom: '20px' }}>
+                                <h4 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: '600' }}>
+                                  SEO Audit Results
+                                </h4>
+
+                                {/* Overall Score */}
+                                <div style={{ marginBottom: '15px', display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                                  <div className="stat-card">
+                                    <div className="stat-label">Overall SEO Score</div>
+                                    <div className="stat-value" style={{
+                                      fontSize: '24px',
+                                      color: seo.overall_score >= 80 ? '#10b981' :
+                                             seo.overall_score >= 60 ? '#f59e0b' : '#ef4444'
+                                    }}>
+                                      {seo.overall_score}/100
+                                    </div>
+                                  </div>
+
+                                  {metaTags.has_title !== undefined && (
+                                    <div className="stat-card">
+                                      <div className="stat-label">Meta Title</div>
+                                      <div style={{ fontSize: '12px' }}>
+                                        <span className={`badge badge-${metaTags.has_title ? 'success' : 'danger'}`}>
+                                          {metaTags.has_title ? 'Present' : 'Missing'}
+                                        </span>
+                                        {metaTags.title_length > 0 && (
+                                          <div style={{ marginTop: '5px', color: '#6b7280' }}>
+                                            {metaTags.title_length} characters
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {metaTags.has_description !== undefined && (
+                                    <div className="stat-card">
+                                      <div className="stat-label">Meta Description</div>
+                                      <div style={{ fontSize: '12px' }}>
+                                        <span className={`badge badge-${metaTags.has_description ? 'success' : 'danger'}`}>
+                                          {metaTags.has_description ? 'Present' : 'Missing'}
+                                        </span>
+                                        {metaTags.description_length > 0 && (
+                                          <div style={{ marginTop: '5px', color: '#6b7280' }}>
+                                            {metaTags.description_length} characters
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {headings && (
+                                    <div className="stat-card">
+                                      <div className="stat-label">H1 Headings</div>
+                                      <div style={{ fontSize: '16px' }}>
+                                        <span className={`badge badge-${headings.h1_count === 1 ? 'success' : 'warning'}`}>
+                                          {headings.h1_count} found
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {images && (
+                                    <div className="stat-card">
+                                      <div className="stat-label">Images with Alt Text</div>
+                                      <div style={{ fontSize: '16px' }}>
+                                        {images.alt_text_percentage}%
+                                        <div style={{ fontSize: '12px', marginTop: '5px', color: '#6b7280' }}>
+                                          {images.images_with_alt}/{images.total_images} images
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {technical.uses_https !== undefined && (
+                                    <div className="stat-card">
+                                      <div className="stat-label">HTTPS</div>
+                                      <span className={`badge badge-${technical.uses_https ? 'success' : 'danger'}`}>
+                                        {technical.uses_https ? 'Enabled' : 'Disabled'}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* SEO Issues */}
+                                {issues.length > 0 && (
+                                  <div>
+                                    <h5 style={{ marginBottom: '10px', fontSize: '13px', fontWeight: '600' }}>
+                                      Issues Found ({issues.length})
+                                    </h5>
+                                    <table style={{ background: 'white' }}>
+                                      <thead>
+                                        <tr>
+                                          <th>Severity</th>
+                                          <th>Category</th>
+                                          <th>Issue</th>
+                                          <th>Description</th>
+                                          <th>Recommendation</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {issues.slice(0, 10).map((issue, idx) => (
+                                          <tr key={idx}>
+                                            <td>
+                                              <span className={`badge badge-${
+                                                issue.severity === 'critical' ? 'danger' :
+                                                issue.severity === 'warning' ? 'warning' : 'info'
+                                              }`}>
+                                                {issue.severity}
+                                              </span>
+                                            </td>
+                                            <td><small>{issue.category}</small></td>
+                                            <td><strong>{issue.issue}</strong></td>
+                                            <td><small style={{ color: '#6b7280' }}>{issue.description}</small></td>
+                                            <td><small style={{ color: '#6b7280' }}>{issue.recommendation}</small></td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                    {issues.length > 10 && (
+                                      <div style={{ marginTop: '10px', fontSize: '12px', color: '#6b7280' }}>
+                                        Showing 10 of {issues.length} issues
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          } catch (error) {
+                            console.error('Error parsing SEO results:', error);
+                            return null;
+                          }
+                        })()}
+
+                        {/* Visual Regression Results */}
+                        {runDetails.visual_results && (() => {
+                          try {
+                            const visual = runDetails.visual_results;
+                            const comparisons = JSON.parse(visual.comparisons || '[]');
+                            const issues = JSON.parse(visual.issues || '[]');
+
+                            return (
+                              <div style={{ marginBottom: '20px' }}>
+                                <h4 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: '600' }}>
+                                  Visual Regression Results
+                                </h4>
+
+                                {/* Overall Score and Info */}
+                                <div style={{ marginBottom: '15px', display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                                  <div className="stat-card">
+                                    <div className="stat-label">Visual Similarity Score</div>
+                                    <div className="stat-value" style={{
+                                      fontSize: '24px',
+                                      color: visual.overall_score >= 95 ? '#10b981' :
+                                             visual.overall_score >= 85 ? '#f59e0b' : '#ef4444'
+                                    }}>
+                                      {visual.overall_score}/100
+                                    </div>
+                                  </div>
+
+                                  {visual.is_baseline_run && (
+                                    <div className="stat-card" style={{ background: '#fef3c7', border: '1px solid #fbbf24' }}>
+                                      <div className="stat-label">Baseline Created</div>
+                                      <div style={{ fontSize: '14px', color: '#92400e' }}>
+                                        First run - baseline images saved
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {comparisons.length > 0 && (
+                                    <>
+                                      <div className="stat-card">
+                                        <div className="stat-label">Viewports Tested</div>
+                                        <div className="stat-value" style={{ fontSize: '20px' }}>
+                                          {comparisons.length}
+                                        </div>
+                                      </div>
+
+                                      <div className="stat-card">
+                                        <div className="stat-label">Passed</div>
+                                        <div className="stat-value" style={{ fontSize: '20px', color: '#10b981' }}>
+                                          {comparisons.filter(c => c.passed).length}
+                                        </div>
+                                      </div>
+
+                                      <div className="stat-card">
+                                        <div className="stat-label">Failed</div>
+                                        <div className="stat-value" style={{ fontSize: '20px', color: '#ef4444' }}>
+                                          {comparisons.filter(c => !c.passed).length}
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+
+                                {/* Viewport Comparisons */}
+                                {comparisons.length > 0 && (
+                                  <div>
+                                    <h5 style={{ marginBottom: '10px', fontSize: '13px', fontWeight: '600' }}>
+                                      Viewport Comparisons
+                                    </h5>
+                                    <table style={{ background: 'white' }}>
+                                      <thead>
+                                        <tr>
+                                          <th>Viewport</th>
+                                          <th>Size</th>
+                                          <th>Status</th>
+                                          <th>Difference</th>
+                                          <th>Pixels Changed</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {comparisons.map((comp, idx) => (
+                                          <tr key={idx}>
+                                            <td>
+                                              <strong style={{ textTransform: 'capitalize' }}>{comp.viewport}</strong>
+                                            </td>
+                                            <td>
+                                              <small style={{ color: '#6b7280' }}>
+                                                {comp.width} × {comp.height}
+                                              </small>
+                                            </td>
+                                            <td>
+                                              {comp.is_baseline_run ? (
+                                                <span className="badge badge-info">Baseline</span>
+                                              ) : (
+                                                <span className={`badge badge-${comp.passed ? 'success' : 'danger'}`}>
+                                                  {comp.passed ? 'Passed' : 'Failed'}
+                                                </span>
+                                              )}
+                                            </td>
+                                            <td>
+                                              {!comp.is_baseline_run && (
+                                                <div style={{
+                                                  color: comp.difference_percentage > 1 ? '#ef4444' : '#10b981'
+                                                }}>
+                                                  {comp.difference_percentage.toFixed(2)}%
+                                                </div>
+                                              )}
+                                            </td>
+                                            <td>
+                                              {!comp.is_baseline_run && (
+                                                <small style={{ color: '#6b7280' }}>
+                                                  {comp.pixels_changed.toLocaleString()} / {comp.total_pixels.toLocaleString()}
+                                                </small>
+                                              )}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+
+                                {/* Visual Regression Issues */}
+                                {issues.length > 0 && (
+                                  <div style={{ marginTop: '15px' }}>
+                                    <h5 style={{ marginBottom: '10px', fontSize: '13px', fontWeight: '600' }}>
+                                      Visual Differences Detected ({issues.length})
+                                    </h5>
+                                    <table style={{ background: 'white' }}>
+                                      <thead>
+                                        <tr>
+                                          <th>Severity</th>
+                                          <th>Viewport</th>
+                                          <th>Difference</th>
+                                          <th>Description</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {issues.map((issue, idx) => (
+                                          <tr key={idx}>
+                                            <td>
+                                              <span className={`badge badge-${
+                                                issue.severity === 'critical' ? 'danger' :
+                                                issue.severity === 'warning' ? 'warning' : 'info'
+                                              }`}>
+                                                {issue.severity}
+                                              </span>
+                                            </td>
+                                            <td>
+                                              <strong style={{ textTransform: 'capitalize' }}>{issue.viewport}</strong>
+                                            </td>
+                                            <td>
+                                              <div style={{ color: '#ef4444' }}>
+                                                {issue.difference_percentage.toFixed(2)}%
+                                              </div>
+                                              <small style={{ color: '#6b7280' }}>
+                                                {issue.pixels_changed.toLocaleString()} pixels
+                                              </small>
+                                            </td>
+                                            <td>
+                                              <small style={{ color: '#6b7280' }}>{issue.description}</small>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          } catch (error) {
+                            console.error('Error parsing visual regression results:', error);
+                            return null;
+                          }
+                        })()}
+
+                        {/* Performance Metrics */}
+                        {runDetails.metrics && (
+                          <div>
+                            <h4 style={{ marginBottom: '10px', fontSize: '14px', fontWeight: '600' }}>
+                              Performance Metrics
+                            </h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px' }}>
+                              {runDetails.metrics.lcp && (
+                                <div className="stat-card">
+                                  <div className="stat-label">LCP</div>
+                                  <div className="stat-value" style={{ fontSize: '20px' }}>
+                                    {runDetails.metrics.lcp.toFixed(0)}ms
+                                  </div>
+                                </div>
+                              )}
+                              {runDetails.metrics.fcp && (
+                                <div className="stat-card">
+                                  <div className="stat-label">FCP</div>
+                                  <div className="stat-value" style={{ fontSize: '20px' }}>
+                                    {runDetails.metrics.fcp.toFixed(0)}ms
+                                  </div>
+                                </div>
+                              )}
+                              {runDetails.metrics.ttfb && (
+                                <div className="stat-card">
+                                  <div className="stat-label">TTFB</div>
+                                  <div className="stat-value" style={{ fontSize: '20px' }}>
+                                    {runDetails.metrics.ttfb.toFixed(0)}ms
+                                  </div>
+                                </div>
+                              )}
+                              {runDetails.metrics.performance_score && (
+                                <div className="stat-card">
+                                  <div className="stat-label">Performance</div>
+                                  <div className="stat-value" style={{ fontSize: '20px' }}>
+                                    {runDetails.metrics.performance_score}
+                                  </div>
+                                </div>
+                              )}
+                              {runDetails.metrics.accessibility_score && (
+                                <div className="stat-card">
+                                  <div className="stat-label">Accessibility</div>
+                                  <div className="stat-value" style={{ fontSize: '20px' }}>
+                                    {runDetails.metrics.accessibility_score}
+                                  </div>
+                                </div>
+                              )}
+                              {runDetails.metrics.seo_score && (
+                                <div className="stat-card">
+                                  <div className="stat-label">SEO</div>
+                                  <div className="stat-value" style={{ fontSize: '20px' }}>
+                                    {runDetails.metrics.seo_score}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Report Link */}
+                        {runDetails.report_url && (
+                          <div style={{ marginTop: '15px' }}>
+                            <a
+                              href={getReportUrl(runDetails.report_url)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-primary"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                            >
+                              View Lighthouse Report
+                              <ExternalLink size={14} />
+                            </a>
+                          </div>
+                        )}
+
+                        {/* PDF Report Download */}
+                        <div style={{ marginTop: '15px' }}>
+                          <button
+                            onClick={() => handleDownloadReport(runDetails.id)}
+                            disabled={generatingReport === runDetails.id}
+                            className="btn btn-success"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                          >
+                            {generatingReport === runDetails.id ? (
+                              <>Generating PDF...</>
+                            ) : (
+                              <>
+                                <FileDown size={14} />
+                                Download PDF Report
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                </div>
+              </ScrollReveal>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default TestRuns

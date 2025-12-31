@@ -1,0 +1,263 @@
+.process-monitor {
+  padding: 24px;
+}
+
+.process-header {
+  margin-bottom: 24px;
+}
+
+.process-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.process-header p {
+  color: #6b7280;
+  margin: 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-card.running {
+  border-left: 4px solid #3b82f6;
+}
+
+.stat-card.completed {
+  border-left: 4px solid #10b981;
+}
+
+.stat-card.failed {
+  border-left: 4px solid #ef4444;
+}
+
+.stat-card.total {
+  border-left: 4px solid #8b5cf6;
+}
+
+.stat-icon {
+  font-size: 32px;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  background: white;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  width: fit-content;
+}
+
+.filter-tabs button {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-tabs button:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.filter-tabs button.active {
+  background: #2563eb;
+  color: white;
+}
+
+.processes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 16px;
+}
+
+.process-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  transition: box-shadow 0.2s;
+}
+
+.process-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.process-card.running {
+  border-left: 4px solid #3b82f6;
+}
+
+.process-card.completed {
+  border-left: 4px solid #10b981;
+}
+
+.process-card.failed {
+  border-left: 4px solid #ef4444;
+}
+
+.process-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.process-type {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.process-icon {
+  font-size: 24px;
+}
+
+.process-type-text {
+  font-weight: 600;
+  font-size: 16px;
+  color: #111827;
+  text-transform: capitalize;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-running {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-failed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.process-website,
+.process-url {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.process-website strong,
+.process-url strong {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 24px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 16px 0;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  transition: width 0.5s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.process-footer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.process-time,
+.process-duration {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.time-label,
+.duration-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.time-value,
+.duration-value {
+  color: #374151;
+}
+
+.process-error {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #991b1b;
+}
+
+.process-error strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  padding: 60px 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 16px;
+}
+
+.loading {
+  padding: 60px 20px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 16px;
+}

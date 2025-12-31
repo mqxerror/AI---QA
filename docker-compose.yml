@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  dashboard-backend:
+    build: ./backend
+    container_name: qa-dashboard-backend
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - NODE_ENV=production
+      - TEST_API_URL=http://38.97.60.181:3003
+      - MINIO_URL=http://38.97.60.181:9002
+      - DATABASE_PATH=/app/database/qa-tests.db
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-key-in-production}
+      - JWT_EXPIRES_IN=7d
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - ALLOWED_ORIGINS=https://portugalgoldenvisas.co,http://portugalgoldenvisas.co,http://localhost:5174,http://localhost:3005
+    volumes:
+      - qa-database:/app/database
+      - qa-reports:/app/reports
+      - qa-screenshots:/app/screenshots
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3004/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - qa-network
+
+  dashboard-frontend:
+    build: ./frontend
+    container_name: qa-dashboard-frontend
+    ports:
+      - "3005:80"
+    depends_on:
+      dashboard-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - qa-network
+
+networks:
+  qa-network:
+    driver: bridge
+
+volumes:
+  qa-database:
+    driver: local
+  qa-reports:
+    driver: local
+  qa-screenshots:
+    driver: local
