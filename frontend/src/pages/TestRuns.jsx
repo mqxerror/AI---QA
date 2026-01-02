@@ -110,70 +110,97 @@ function TestRuns() {
 
       {/* Filter Tabs */}
       <ScrollReveal delay={0.1} direction="up">
-        <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <div className="btn-group mb-3" role="group">
           <button
+            type="button"
             onClick={() => setFilter('all')}
-            className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ fontSize: '14px', padding: '6px 12px' }}
+            className={`btn btn-sm ${filter === 'all' ? 'btn-primary' : 'btn-outline-primary'}`}
           >
-            All (<AnimatedCounter value={runs?.length || 0} />)
+            All
+            <span className="badge bg-primary-lt ms-2">
+              <AnimatedCounter value={runs?.length || 0} />
+            </span>
           </button>
-        <button
-          onClick={() => setFilter('Smoke')}
-          className={`btn ${filter === 'Smoke' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ fontSize: '14px', padding: '6px 12px' }}
-        >
-          Smoke (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Smoke').length || 0} />)
-        </button>
-        <button
-          onClick={() => setFilter('Performance')}
-          className={`btn ${filter === 'Performance' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ fontSize: '14px', padding: '6px 12px' }}
-        >
-          Performance (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Performance').length || 0} />)
-        </button>
-        <button
-          onClick={() => setFilter('Load Test')}
-          className={`btn ${filter === 'Load Test' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ fontSize: '14px', padding: '6px 12px' }}
-        >
-          Load (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Load Test').length || 0} />)
-        </button>
-        <button
-          onClick={() => setFilter('Accessibility')}
-          className={`btn ${filter === 'Accessibility' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ fontSize: '14px', padding: '6px 12px' }}
-        >
-          Accessibility (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Accessibility').length || 0} />)
-        </button>
-        <button
-          onClick={() => setFilter('Security Scan')}
-          className={`btn ${filter === 'Security Scan' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ fontSize: '14px', padding: '6px 12px' }}
-        >
-          Security (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Security Scan').length || 0} />)
-        </button>
-        <button
-          onClick={() => setFilter('SEO Audit')}
-          className={`btn ${filter === 'SEO Audit' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ fontSize: '14px', padding: '6px 12px' }}
-        >
-          SEO (<AnimatedCounter value={runs?.filter(r => r.test_type === 'SEO Audit').length || 0} />)
-        </button>
-        <button
-          onClick={() => setFilter('Visual Regression')}
-          className={`btn ${filter === 'Visual Regression' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ fontSize: '14px', padding: '6px 12px' }}
-        >
-          Visual (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Visual Regression').length || 0} />)
-        </button>
-        <button
-          onClick={() => setFilter('Pixel Audit')}
-          className={`btn ${filter === 'Pixel Audit' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ fontSize: '14px', padding: '6px 12px' }}
-        >
-          Pixel Audit (<AnimatedCounter value={runs?.filter(r => r.test_type === 'Pixel Audit').length || 0} />)
-        </button>
+          <button
+            type="button"
+            onClick={() => setFilter('Smoke')}
+            className={`btn btn-sm ${filter === 'Smoke' ? 'btn-primary' : 'btn-outline-primary'}`}
+          >
+            Smoke
+            <span className="badge bg-primary-lt ms-2">
+              <AnimatedCounter value={runs?.filter(r => r.test_type === 'Smoke').length || 0} />
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('Performance')}
+            className={`btn btn-sm ${filter === 'Performance' ? 'btn-primary' : 'btn-outline-primary'}`}
+          >
+            Performance
+            <span className="badge bg-primary-lt ms-2">
+              <AnimatedCounter value={runs?.filter(r => r.test_type === 'Performance').length || 0} />
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('Load Test')}
+            className={`btn btn-sm ${filter === 'Load Test' ? 'btn-primary' : 'btn-outline-primary'}`}
+          >
+            Load
+            <span className="badge bg-primary-lt ms-2">
+              <AnimatedCounter value={runs?.filter(r => r.test_type === 'Load Test').length || 0} />
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('Accessibility')}
+            className={`btn btn-sm ${filter === 'Accessibility' ? 'btn-primary' : 'btn-outline-primary'}`}
+          >
+            A11y
+            <span className="badge bg-primary-lt ms-2">
+              <AnimatedCounter value={runs?.filter(r => r.test_type === 'Accessibility').length || 0} />
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('Security Scan')}
+            className={`btn btn-sm ${filter === 'Security Scan' ? 'btn-primary' : 'btn-outline-primary'}`}
+          >
+            Security
+            <span className="badge bg-primary-lt ms-2">
+              <AnimatedCounter value={runs?.filter(r => r.test_type === 'Security Scan').length || 0} />
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('SEO Audit')}
+            className={`btn btn-sm ${filter === 'SEO Audit' ? 'btn-primary' : 'btn-outline-primary'}`}
+          >
+            SEO
+            <span className="badge bg-primary-lt ms-2">
+              <AnimatedCounter value={runs?.filter(r => r.test_type === 'SEO Audit').length || 0} />
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('Visual Regression')}
+            className={`btn btn-sm ${filter === 'Visual Regression' ? 'btn-primary' : 'btn-outline-primary'}`}
+          >
+            Visual
+            <span className="badge bg-primary-lt ms-2">
+              <AnimatedCounter value={runs?.filter(r => r.test_type === 'Visual Regression').length || 0} />
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilter('Pixel Audit')}
+            className={`btn btn-sm ${filter === 'Pixel Audit' ? 'btn-primary' : 'btn-outline-primary'}`}
+          >
+            Pixel
+            <span className="badge bg-primary-lt ms-2">
+              <AnimatedCounter value={runs?.filter(r => r.test_type === 'Pixel Audit').length || 0} />
+            </span>
+          </button>
         </div>
       </ScrollReveal>
 
@@ -247,53 +274,59 @@ function TestRuns() {
 
                 {/* Expanded Test Runs Table */}
                 {isExpanded && (
-                  <table>
-                    <thead>
-                      <tr>
-                        <th style={{ width: '30px' }}></th>
-                        <th>Test Type</th>
-                        <th>Status</th>
-                        <th>Tests</th>
-                        <th>Duration</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {group.runs.map(run => (
-                        <tr
-                          key={run.id}
-                          onClick={() => handleOpenTestModal(run)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <td>
-                            <ChevronRight size={16} />
-                          </td>
-                          <td>
-                            <span className="badge badge-info">{run.test_type}</span>
-                          </td>
-                          <td>
-                            <span className={`badge badge-${run.status === 'Pass' ? 'success' : 'danger'}`}>
-                              {run.status}
-                            </span>
-                          </td>
-                          <td>
-                            {run.passed}/{run.total_tests}
-                            {run.failed > 0 && (
-                              <span style={{ color: '#dc2626', marginLeft: '5px' }}>
-                                ({run.failed} failed)
-                              </span>
-                            )}
-                          </td>
-                          <td>{run.duration_ms ? `${(run.duration_ms / 1000).toFixed(2)}s` : '-'}</td>
-                          <td>
-                            <small style={{ color: '#6b7280' }}>
-                              {new Date(run.created_at).toLocaleString()}
-                            </small>
-                          </td>
+                  <div className="table-responsive">
+                    <table className="table table-vcenter card-table table-hover">
+                      <thead>
+                        <tr>
+                          <th className="w-1">
+                            <ChevronDown size={16} className="text-primary" />
+                          </th>
+                          <th>Test Type</th>
+                          <th>Status</th>
+                          <th>Results</th>
+                          <th>Duration</th>
+                          <th>Date</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {group.runs.map(run => (
+                          <tr
+                            key={run.id}
+                            onClick={() => handleOpenTestModal(run)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <td>
+                              <ChevronRight size={16} className="text-muted" />
+                            </td>
+                            <td>
+                              <span className="badge bg-info">{run.test_type}</span>
+                            </td>
+                            <td>
+                              <span className={`badge bg-${run.status === 'Pass' ? 'success' : 'danger'}`}>
+                                {run.status}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="d-flex align-items-center gap-2">
+                                <span className="text-muted">{run.passed}/{run.total_tests}</span>
+                                {run.failed > 0 && (
+                                  <span className="badge bg-danger-lt">
+                                    {run.failed} failed
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="text-muted">
+                              {run.duration_ms ? `${(run.duration_ms / 1000).toFixed(2)}s` : '-'}
+                            </td>
+                            <td className="text-muted">
+                              {new Date(run.created_at).toLocaleString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
                 </div>
               </ScrollReveal>

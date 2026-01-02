@@ -1,0 +1,89 @@
+# BMAD-METHOD Configuration for QA Dashboard
+# Version: 6.0.0+
+# Framework: ZNS-METHOD
+
+project:
+  name: "QA Testing Dashboard"
+  description: "Comprehensive QA Testing Dashboard with 8 test types"
+  type: "web-application"
+  tech_stack:
+    backend:
+      - Node.js
+      - Express
+      - SQLite (better-sqlite3)
+      - WebSocket
+    frontend:
+      - React
+      - Vite
+      - TailwindCSS
+      - Framer Motion
+    testing:
+      - Playwright
+      - Lighthouse
+      - Pixelmatch
+
+  # Folder structure following BMAD V6+ conventions
+  folders:
+    bmad_folder: ".bmad"
+    output_folder: "_bmad-output"
+    planning_artifacts: "_bmad-output/planning-artifacts"
+    implementation_artifacts: "_bmad-output/implementation-artifacts"
+    docs: "docs"
+
+# Development phase
+phase:
+  current: 4  # Implementation phase
+  completed:
+    - 0  # Documentation
+    - 1  # Analysis
+    - 2  # Planning
+    - 3  # Solutioning
+
+# Scale-adaptive level (0-4)
+complexity:
+  level: 2  # Medium complexity project
+  reasoning: "Multi-service dashboard with real-time updates and multiple test integrations"
+
+# Team structure
+team:
+  roles:
+    - Product Owner
+    - Full Stack Developer
+    - QA Specialist
+    - DevOps Engineer
+
+# Current sprint/iteration
+iteration:
+  current: "Production Deployment & CORS Fixes"
+  goals:
+    - "Fix CORS configuration for portugalgoldenvisas.co"
+    - "Deploy to production server"
+    - "Resolve modal data display issues"
+    - "Standardize UI components"
+
+# Integration points
+integrations:
+  test_api:
+    url: "http://38.97.60.181:3003"
+    purpose: "External testing service API"
+  minio:
+    url: "http://38.97.60.181:9002"
+    purpose: "Object storage for reports"
+  deployment:
+    platform: "Dokploy"
+    domain: "portugalgoldenvisas.co"
+    ports:
+      backend: 3004
+      frontend: 3005
+
+# Quality metrics
+quality:
+  test_coverage_target: 80
+  performance_budget:
+    lighthouse_score: 90
+    page_load_time: "< 2s"
+  browser_support:
+    - Chrome
+    - Firefox
+    - Safari
+    - Edge

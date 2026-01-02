@@ -28,6 +28,10 @@ backend/reports/
 backend/screenshots/
 !backend/screenshots/baseline/
 
+# BMAD output artifacts
+_bmad-output/
+.bmad/*.compiled.xml
+
 # IDE
 .vscode/
 .idea/

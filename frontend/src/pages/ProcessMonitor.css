@@ -9,12 +9,12 @@
 .process-header h1 {
   font-size: 32px;
   font-weight: 700;
-  color: #111827;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
 }
 
 .process-header p {
-  color: #6b7280;
+  color: var(--text-secondary);
   margin: 0;
 }
 
@@ -26,13 +26,21 @@
 }
 
 .stat-card {
-  background: white;
+  background: var(--gradient-card);
+  backdrop-filter: var(--glass-blur);
   padding: 20px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
   display: flex;
   align-items: center;
   gap: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(117, 81, 255, 0.15);
 }
 
 .stat-card.running {
@@ -63,18 +71,20 @@
   display: flex;
   gap: 8px;
   margin-bottom: 24px;
-  background: white;
-  padding: 4px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  background: var(--gradient-card);
+  backdrop-filter: var(--glass-blur);
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
   width: fit-content;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .filter-tabs button {
   padding: 8px 16px;
   border: none;
   background: transparent;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-weight: 500;
   font-size: 14px;
   border-radius: 6px;
@@ -83,12 +93,12 @@
 }
 
 .filter-tabs button:hover {
-  background: #f3f4f6;
-  color: #111827;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--text-primary);
 }
 
 .filter-tabs button.active {
-  background: #2563eb;
+  background: var(--gradient-primary);
   color: white;
 }
 
@@ -99,15 +109,19 @@
 }
 
 .process-card {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background: var(--gradient-card);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
   padding: 20px;
-  transition: box-shadow 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .process-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-color: var(--border-color-hover);
+  box-shadow: 0 12px 40px rgba(117, 81, 255, 0.15);
+  transform: translateY(-2px);
 }
 
 .process-card.running {
@@ -142,7 +156,7 @@
 .process-type-text {
   font-weight: 600;
   font-size: 16px;
-  color: #111827;
+  color: var(--text-primary);
   text-transform: capitalize;
 }
 
@@ -155,37 +169,37 @@
 }
 
 .status-running {
-  background: #dbeafe;
-  color: #1e40af;
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
 }
 
 .status-completed {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
 }
 
 .status-failed {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
 }
 
 .process-website,
 .process-url {
   margin-bottom: 8px;
   font-size: 14px;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .process-website strong,
 .process-url strong {
-  color: #6b7280;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .progress-bar-container {
   width: 100%;
   height: 24px;
-  background: #f3f4f6;
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   overflow: hidden;
   margin: 16px 0;
@@ -194,7 +208,7 @@
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  background: var(--gradient-primary);
   transition: width 0.5s ease;
   display: flex;
   align-items: center;
@@ -210,7 +224,7 @@
 .process-footer {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .process-time,
@@ -223,23 +237,23 @@
 
 .time-label,
 .duration-label {
-  color: #6b7280;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .time-value,
 .duration-value {
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .process-error {
   margin-top: 12px;
   padding: 8px 12px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
   border-radius: 6px;
   font-size: 13px;
-  color: #991b1b;
+  color: #f87171;
 }
 
 .process-error strong {
@@ -251,13 +265,13 @@
   grid-column: 1 / -1;
   padding: 60px 20px;
   text-align: center;
-  color: #9ca3af;
+  color: var(--text-muted);
   font-size: 16px;
 }
 
 .loading {
   padding: 60px 20px;
   text-align: center;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 16px;
 }

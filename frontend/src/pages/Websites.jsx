@@ -9,11 +9,13 @@ import {
   FadeText,
   FlipWords
 } from '../components/ui'
-import TestModal from '../components/TestModal'
+import { useToast } from '../contexts/ToastContext'
+import TestDrawer from '../components/TestDrawer'
 import './Websites.css'
 
 function Websites() {
   const queryClient = useQueryClient()
+  const toast = useToast()
   const [showAddForm, setShowAddForm] = useState(false)
   const [formData, setFormData] = useState({ name: '', url: '', test_frequency: 'Manual' })
   const [runningTests, setRunningTests] = useState(new Set())
@@ -32,12 +34,22 @@ function Websites() {
       queryClient.invalidateQueries(['websites'])
       setShowAddForm(false)
       setFormData({ name: '', url: '', test_frequency: 'Manual' })
+      toast.success('Website added successfully!')
+    },
+    onError: (error) => {
+      toast.error('Failed to add website: ' + getErrorMessage(error))
     }
   })
 
   const deleteMutation = useMutation({
     mutationFn: deleteWebsite,
-    onSuccess: () => queryClient.invalidateQueries(['websites'])
+    onSuccess: () => {
+      queryClient.invalidateQueries(['websites'])
+      toast.success('Website deleted successfully')
+    },
+    onError: (error) => {
+      toast.error('Failed to delete website: ' + getErrorMessage(error))
+    }
   })
 
   // Helper to extract error message from axios error
@@ -52,8 +64,9 @@ function Websites() {
       queryClient.invalidateQueries(['websites'])
       queryClient.invalidateQueries(['test-runs'])
       queryClient.invalidateQueries(['stats'])
+      toast.success('Smoke test completed successfully!')
     } catch (error) {
-      alert('Test failed: ' + getErrorMessage(error))
+      toast.error('Test failed: ' + getErrorMessage(error))
     } finally {
       setRunningTests(prev => {
         const next = new Set(prev)
@@ -71,7 +84,7 @@ function Websites() {
       queryClient.invalidateQueries(['test-runs'])
       queryClient.invalidateQueries(['stats'])
     } catch (error) {
-      alert('Test failed: ' + getErrorMessage(error))
+      toast.error('Test failed: ' + getErrorMessage(error))
     } finally {
       setRunningTests(prev => {
         const next = new Set(prev)
@@ -89,7 +102,7 @@ function Websites() {
       queryClient.invalidateQueries(['test-runs'])
       queryClient.invalidateQueries(['stats'])
     } catch (error) {
-      alert('Test failed: ' + getErrorMessage(error))
+      toast.error('Test failed: ' + getErrorMessage(error))
     } finally {
       setRunningTests(prev => {
         const next = new Set(prev)
@@ -107,7 +120,7 @@ function Websites() {
       queryClient.invalidateQueries(['test-runs'])
       queryClient.invalidateQueries(['stats'])
     } catch (error) {
-      alert('Test failed: ' + getErrorMessage(error))
+      toast.error('Test failed: ' + getErrorMessage(error))
     } finally {
       setRunningTests(prev => {
         const next = new Set(prev)
@@ -125,7 +138,7 @@ function Websites() {
       queryClient.invalidateQueries(['test-runs'])
       queryClient.invalidateQueries(['stats'])
     } catch (error) {
-      alert('Test failed: ' + getErrorMessage(error))
+      toast.error('Test failed: ' + getErrorMessage(error))
     } finally {
       setRunningTests(prev => {
         const next = new Set(prev)
@@ -143,7 +156,7 @@ function Websites() {
       queryClient.invalidateQueries(['test-runs'])
       queryClient.invalidateQueries(['stats'])
     } catch (error) {
-      alert('Test failed: ' + getErrorMessage(error))
+      toast.error('Test failed: ' + getErrorMessage(error))
     } finally {
       setRunningTests(prev => {
         const next = new Set(prev)
@@ -161,7 +174,7 @@ function Websites() {
       queryClient.invalidateQueries(['test-runs'])
       queryClient.invalidateQueries(['stats'])
     } catch (error) {
-      alert('Test failed: ' + getErrorMessage(error))
+      toast.error('Test failed: ' + getErrorMessage(error))
     } finally {
       setRunningTests(prev => {
         const next = new Set(prev)
@@ -182,7 +195,7 @@ function Websites() {
       queryClient.invalidateQueries(['test-runs'])
       queryClient.invalidateQueries(['stats'])
     } catch (error) {
-      alert('Test failed: ' + getErrorMessage(error))
+      toast.error('Test failed: ' + getErrorMessage(error))
     } finally {
       setRunningTests(prev => {
         const next = new Set(prev)
@@ -236,48 +249,61 @@ function Websites() {
 
       {showAddForm && (
         <ScrollReveal delay={0.1} direction="up">
-          <div className="card" style={{ marginBottom: '20px' }}>
-            <div className="card-header">Add New Website</div>
-            <div className="form-group">
-              <label>Website Name</label>
-              <input
-                type="text"
-                placeholder="Google"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
+          <div className="card mb-3">
+            <div className="card-header">
+              <h3 className="card-title">Add New Website</h3>
             </div>
-            <div className="form-group">
-              <label>URL</label>
-              <input
-                type="url"
-                placeholder="https://google.com"
-                value={formData.url}
-                onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-              />
+            <div className="card-body">
+              <div className="mb-3">
+                <label className="form-label required">Website Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter website name (e.g., Google)"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+                <small className="form-hint">A friendly name to identify this website</small>
+              </div>
+              <div className="mb-3">
+                <label className="form-label required">URL</label>
+                <input
+                  type="url"
+                  className="form-control"
+                  placeholder="https://example.com"
+                  value={formData.url}
+                  onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                />
+                <small className="form-hint">Full URL including https://</small>
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Test Frequency</label>
+                <select
+                  className="form-select"
+                  value={formData.test_frequency}
+                  onChange={(e) => setFormData({ ...formData, test_frequency: e.target.value })}
+                >
+                  <option>Manual</option>
+                  <option>Daily</option>
+                  <option>Weekly</option>
+                </select>
+                <small className="form-hint">How often to run automated tests</small>
+              </div>
             </div>
-            <div className="form-group">
-              <label>Test Frequency</label>
-              <select
-                value={formData.test_frequency}
-                onChange={(e) => setFormData({ ...formData, test_frequency: e.target.value })}
-              >
-                <option>Manual</option>
-                <option>Daily</option>
-                <option>Weekly</option>
-              </select>
-            </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                className="btn btn-primary"
-                onClick={() => createMutation.mutate(formData)}
-                disabled={!formData.name || !formData.url}
-              >
-                Add Website
-              </button>
-              <button className="btn btn-secondary" onClick={() => setShowAddForm(false)}>
-                Cancel
-              </button>
+            <div className="card-footer">
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-primary"
+                  onClick={() => createMutation.mutate(formData)}
+                  disabled={!formData.name || !formData.url}
+                >
+                  <Plus size={16} className="me-1" />
+                  Add Website
+                </button>
+                <button className="btn btn-outline-secondary" onClick={() => setShowAddForm(false)}>
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </ScrollReveal>
@@ -295,82 +321,89 @@ function Websites() {
               </FadeText>
             </div>
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Website</th>
-                  <th>Status</th>
-                  <th>Last Result</th>
-                  <th>Last Tested</th>
-                  <th>Total Tests</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {websites?.map((website, idx) => (
-                  <tr key={website.id}>
-                    <td>
-                      <strong>{website.name}</strong>
-                      <br />
-                      <small style={{ color: '#6b7280' }}>{website.url}</small>
-                    </td>
-                    <td>
-                      <span className={`badge badge-${website.status === 'Active' ? 'success' : 'warning'}`}>
-                        {website.status}
-                      </span>
-                    </td>
-                    <td>
-                      {website.last_result ? (
-                        <span className={`badge badge-${website.last_result === 'Pass' ? 'success' : 'danger'}`}>
-                          {website.last_result}
-                        </span>
-                      ) : (
-                        <span style={{ color: '#6b7280' }}>Not tested</span>
-                      )}
-                    </td>
-                    <td>
-                      {website.last_tested_at ? (
-                        <small style={{ color: '#6b7280' }}>
-                          {new Date(website.last_tested_at).toLocaleString()}
-                        </small>
-                      ) : (
-                        <small style={{ color: '#6b7280' }}>Never</small>
-                      )}
-                    </td>
-                    <td><AnimatedCounter value={website.total_tests || 0} /></td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          className="btn btn-primary"
-                          style={{ padding: '6px 12px', fontSize: '12px' }}
-                          onClick={() => openModal(website)}
-                        >
-                          <Play size={14} style={{ marginRight: '5px' }} />
-                          Run Test
-                        </button>
-
-                        <button
-                          className="btn btn-danger"
-                          style={{ padding: '6px 12px', fontSize: '12px' }}
-                          onClick={() => {
-                            if (confirm(`⚠️ Delete "${website.name}"?\n\nThis will permanently remove the website and all its test history.\n\nThis action cannot be undone.`)) {
-                              deleteMutation.mutate(website.id)
-                            }
-                          }}
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
+            <div className="table-responsive">
+              <table className="table table-vcenter card-table">
+                <thead>
+                  <tr>
+                    <th>Website</th>
+                    <th>Status</th>
+                    <th>Last Result</th>
+                    <th>Last Tested</th>
+                    <th>Tests</th>
+                    <th className="w-1"></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {websites?.map((website, idx) => (
+                    <tr key={website.id}>
+                      <td>
+                        <div className="d-flex align-items-center">
+                          <span className="avatar avatar-sm me-2" style={{ background: 'var(--tblr-primary)', color: 'white' }}>
+                            {website.name.substring(0, 2).toUpperCase()}
+                          </span>
+                          <div>
+                            <div className="fw-bold">{website.name}</div>
+                            <div className="text-muted small">{website.url}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`badge bg-${website.status === 'Active' ? 'success' : 'warning'}`}>
+                          {website.status}
+                        </span>
+                      </td>
+                      <td>
+                        {website.last_result ? (
+                          <span className={`badge bg-${website.last_result === 'Pass' ? 'success' : 'danger'}`}>
+                            {website.last_result}
+                          </span>
+                        ) : (
+                          <span className="text-muted">Not tested</span>
+                        )}
+                      </td>
+                      <td className="text-muted">
+                        {website.last_tested_at ? (
+                          new Date(website.last_tested_at).toLocaleString()
+                        ) : (
+                          'Never'
+                        )}
+                      </td>
+                      <td>
+                        <span className="badge bg-azure-lt">
+                          <AnimatedCounter value={website.total_tests || 0} />
+                        </span>
+                      </td>
+                      <td>
+                        <div className="btn-list">
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => openModal(website)}
+                          >
+                            <Play size={14} className="me-1" />
+                            Run
+                          </button>
+                          <button
+                            className="btn btn-sm btn-ghost-danger"
+                            onClick={() => {
+                              if (confirm(`⚠️ Delete "${website.name}"?\n\nThis will permanently remove the website and all its test history.\n\nThis action cannot be undone.`)) {
+                                deleteMutation.mutate(website.id)
+                              }
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </ScrollReveal>
 
-      <TestModal
+      <TestDrawer
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         websiteId={selectedWebsiteId}

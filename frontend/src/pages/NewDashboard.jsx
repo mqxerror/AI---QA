@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { getStats, getTestRuns } from '../services/api';
 import { Activity, Globe, Percent, TestTube, Heart, Plus, Play, FileText, Zap, TrendingUp, Shield } from 'lucide-react';
+import { IconWorld, IconPercentage, IconFlask, IconHeartbeat, IconTrendingUp } from '@tabler/icons-react';
 import {
   AnimatedCounter,
   Marquee,
@@ -64,62 +65,106 @@ export default function NewDashboard() {
       )}
 
       {stats && (
-        <div className="stats-overview">
-          <ScrollReveal delay={0.1} direction="up">
-            <div className="stat-box">
-              <div className="stat-icon" style={{ background: '#dbeafe' }}>
-                <Globe size={24} color="#2563eb" />
-              </div>
-              <div>
-                <div className="stat-label">Total Websites</div>
-                <div className="stat-value">
-                  <AnimatedCounter value={stats.total_websites} />
+        <div className="row row-cards mb-4">
+          <ScrollReveal delay={0.1} direction="up" className="col-sm-6 col-lg-3">
+            <div className="card">
+              <div className="card-body">
+                <div className="d-flex align-items-center mb-3">
+                  <div className="subheader">Total Websites</div>
+                  <div className="ms-auto">
+                    <span className="status-dot status-dot-animated bg-green"></span>
+                  </div>
                 </div>
-                <div className="stat-trend positive">
-                  <TrendingUp size={14} />
-                  <span>Active</span>
+                <div className="d-flex align-items-baseline">
+                  <div className="h1 mb-0 me-2">
+                    <AnimatedCounter value={stats.total_websites} />
+                  </div>
+                  <div className="me-auto">
+                    <span className="text-green d-inline-flex align-items-center lh-1">
+                      <IconTrendingUp size={16} className="me-1" />
+                      Active
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </ScrollReveal>
-
-          <ScrollReveal delay={0.2} direction="up">
-            <div className="stat-box">
-              <div className="stat-icon" style={{ background: '#dcfce7' }}>
-                <Percent size={24} color="#16a34a" />
-              </div>
-              <div>
-                <div className="stat-label">Pass Rate (7d)</div>
-                <div className="stat-value">
-                  <AnimatedCounter value={passRate} />%
+              <div className="card-body border-top p-2">
+                <div className="d-flex align-items-center text-muted">
+                  <IconWorld size={16} className="me-2" />
+                  <small>Monitored sites</small>
                 </div>
               </div>
             </div>
           </ScrollReveal>
 
-          <ScrollReveal delay={0.3} direction="up">
-            <div className="stat-box">
-              <div className="stat-icon" style={{ background: '#e0e7ff' }}>
-                <TestTube size={24} color="#4f46e5" />
+          <ScrollReveal delay={0.2} direction="up" className="col-sm-6 col-lg-3">
+            <div className="card">
+              <div className="card-body">
+                <div className="d-flex align-items-center mb-3">
+                  <div className="subheader">Pass Rate (7d)</div>
+                </div>
+                <div className="d-flex align-items-baseline">
+                  <div className="h1 mb-3 me-2">
+                    <AnimatedCounter value={passRate} />%
+                  </div>
+                </div>
+                <div className="progress progress-sm">
+                  <div className="progress-bar bg-success" style={{ width: `${passRate}%` }}></div>
+                </div>
               </div>
-              <div>
-                <div className="stat-label">Total Tests</div>
-                <div className="stat-value">
-                  <AnimatedCounter value={stats.total_tests} />
+              <div className="card-body border-top p-2">
+                <div className="d-flex align-items-center text-muted">
+                  <IconPercentage size={16} className="me-2" />
+                  <small>Success rate</small>
                 </div>
               </div>
             </div>
           </ScrollReveal>
 
-          <ScrollReveal delay={0.4} direction="up">
-            <div className="stat-box">
-              <div className="stat-icon" style={{ background: '#fce7f3' }}>
-                <Heart size={24} color="#ec4899" />
+          <ScrollReveal delay={0.3} direction="up" className="col-sm-6 col-lg-3">
+            <div className="card">
+              <div className="card-body">
+                <div className="d-flex align-items-center mb-3">
+                  <div className="subheader">Total Tests</div>
+                </div>
+                <div className="d-flex align-items-baseline">
+                  <div className="h1 mb-0 me-2">
+                    <AnimatedCounter value={stats.total_tests} />
+                  </div>
+                  <div className="me-auto">
+                    <span className="badge bg-primary-lt">
+                      {stats.tests_passed} passed
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <div className="stat-label">System Health</div>
-                <div className="stat-value">
-                  {stats.active_processes > 0 ? 'Active' : 'Idle'}
+              <div className="card-body border-top p-2">
+                <div className="d-flex align-items-center text-muted">
+                  <IconFlask size={16} className="me-2" />
+                  <small>Test executions</small>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal delay={0.4} direction="up" className="col-sm-6 col-lg-3">
+            <div className="card">
+              <div className="card-body">
+                <div className="d-flex align-items-center mb-3">
+                  <div className="subheader">System Health</div>
+                  <div className="ms-auto">
+                    <span className={`status-dot ${stats.active_processes > 0 ? 'status-dot-animated bg-green' : 'bg-secondary'}`}></span>
+                  </div>
+                </div>
+                <div className="d-flex align-items-baseline">
+                  <div className="h1 mb-0 me-2">
+                    {stats.active_processes > 0 ? 'Active' : 'Idle'}
+                  </div>
+                </div>
+              </div>
+              <div className="card-body border-top p-2">
+                <div className="d-flex align-items-center text-muted">
+                  <IconHeartbeat size={16} className="me-2" />
+                  <small>{stats.active_processes} processes</small>
                 </div>
               </div>
             </div>
@@ -143,11 +188,11 @@ export default function NewDashboard() {
             <p className="text-muted">Run your first test from the Websites page to see results here</p>
           </div>
         ) : (
-          <div className="compact-table-container">
-            <table className="compact-table">
+          <div className="table-responsive">
+            <table className="table table-vcenter card-table">
               <thead>
                 <tr>
-                  <th style={{ width: '50px' }}>Status</th>
+                  <th className="w-1">Status</th>
                   <th>Website</th>
                   <th>Test Type</th>
                   <th>Duration</th>
@@ -157,15 +202,21 @@ export default function NewDashboard() {
               <tbody>
                 {recentRuns.slice(0, 10).map(run => (
                   <tr key={run.id}>
-                    <td className="status-cell">
-                      <span className={`status-icon status-${run.status === 'Pass' ? 'success' : 'error'}`}>
+                    <td>
+                      <span className={`badge bg-${run.status === 'Pass' ? 'success' : 'danger'}`}>
                         {run.status === 'Pass' ? '✓' : '✗'}
                       </span>
                     </td>
-                    <td className="website-name">{run.website_name}</td>
-                    <td className="resource-text">{run.test_type}</td>
-                    <td className="duration-cell">{run.duration_ms ? (run.duration_ms / 1000).toFixed(1) + 's' : '—'}</td>
-                    <td className="time-cell">{new Date(run.created_at).toLocaleString()}</td>
+                    <td className="fw-bold">{run.website_name}</td>
+                    <td>
+                      <span className="badge bg-info">{run.test_type}</span>
+                    </td>
+                    <td className="text-muted">
+                      {run.duration_ms ? (run.duration_ms / 1000).toFixed(1) + 's' : '—'}
+                    </td>
+                    <td className="text-muted">
+                      {new Date(run.created_at).toLocaleString()}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -1,40 +1,41 @@
 
-/* Activity Log Style Updates */
+/* Horizon UI Updates */
 .card {
-  background: white;
-  border-radius: 12px;
-  border: 2px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: var(--gradient-card);
+  backdrop-filter: var(--glass-blur);
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-  border-color: #10b981;
+  transform: translateY(-4px);
+  border-color: var(--border-color-hover);
+  box-shadow: 0 12px 40px rgba(117, 81, 255, 0.15);
 }
 
 table thead {
-  background: #f9fafb;
-  border-bottom: 2px solid #e5e7eb;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 table th {
   padding: 14px 16px;
   font-size: 12px;
-  font-weight: 700;
-  color: #6b7280;
+  font-weight: 600;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 table tbody tr {
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   transition: background 0.15s;
 }
 
 table tbody tr:hover {
-  background: #f9fafb;
+  background: rgba(59, 130, 246, 0.05);
 }
 
 table tbody tr:last-child {
@@ -44,5 +45,5 @@ table tbody tr:last-child {
 table td {
   padding: 12px 16px;
   font-size: 14px;
-  color: #374151;
+  color: var(--text-secondary);
 }

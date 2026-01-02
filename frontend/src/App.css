@@ -1,84 +1,55 @@
-/* Professional Light Theme */
+/* Tabler UI Dashboard - Custom Styles */
 
-.app {
+/* Ensure proper layout */
+.page {
+  display: flex;
   min-height: 100vh;
 }
 
-.navbar {
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color);
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 64px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-.navbar-brand {
-  position: relative;
-}
-
-.navbar-brand h1 {
-  font-size: 20px;
+/* Custom navbar brand styling */
+.navbar-brand-image {
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.3px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.navbar-menu {
-  display: flex;
-  gap: 4px;
+/* Custom active state for nav items */
+.navbar-vertical .nav-item.active .nav-link {
+  background: rgba(98, 116, 241, 0.1);
+  color: #6274f1;
 }
 
-.navbar-menu a {
-  position: relative;
-  padding: 8px 16px;
-  text-decoration: none;
-  color: var(--text-secondary);
-  font-weight: 500;
-  font-size: 14px;
-  border-radius: 6px;
+.navbar-vertical .nav-item.active .nav-link-icon {
+  color: #6274f1;
+}
+
+/* Smooth transitions */
+.nav-link {
   transition: all 0.2s ease;
 }
 
-.navbar-menu a:hover {
-  color: var(--text-primary);
-  background: var(--bg-tertiary);
+.nav-link:hover {
+  background: rgba(98, 116, 241, 0.05);
 }
 
-.navbar-menu a.active {
-  background: var(--primary-color);
-  color: #ffffff;
+/* Page wrapper */
+.page-wrapper {
+  flex: 1;
+  min-width: 0;
 }
 
-.navbar-user {
+/* Container spacing */
+.container-xl {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* Logout button */
+.btn-danger {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.user-info {
-  font-size: 14px;
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.logout-btn {
-  padding: 8px 16px;
-  background: #dc2626;
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.logout-btn:hover {
-  background: #b91c1c;
+  justify-content: center;
 }
