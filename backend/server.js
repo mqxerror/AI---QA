@@ -28,7 +28,8 @@ const PORT = process.env.PORT || 3004;
 const TEST_API_URL = process.env.TEST_API_URL || 'http://38.97.60.181:3003';
 
 // Trust proxy - required for rate limiting behind reverse proxy (nginx/traefik)
-app.set('trust proxy', true);
+// Using '1' to trust only the first proxy hop (Traefik/nginx)
+app.set('trust proxy', 1);
 
 // Security middleware
 app.use(helmet({
@@ -53,6 +54,8 @@ const limiter = rateLimit({
   message: 'Too many requests, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  // Trust the X-Forwarded-For header from our proxy
+  validate: { trustProxy: false }
 });
 app.use('/api/', limiter);
 
