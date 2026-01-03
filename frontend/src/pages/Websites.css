@@ -615,6 +615,43 @@ table td {
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
+/* URL Input with Protocol Selector */
+.websites-page .url-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.websites-page .protocol-select {
+  padding: 12px 12px;
+  border: 1px solid #e5e7eb;
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 95px;
+}
+
+.websites-page .protocol-select:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  z-index: 1;
+}
+
+.websites-page .url-group input {
+  border-radius: 0 10px 10px 0 !important;
+  flex: 1;
+}
+
+.websites-page .url-group input:focus {
+  z-index: 1;
+}
+
 .websites-page .form-footer {
   display: flex;
   justify-content: flex-end;

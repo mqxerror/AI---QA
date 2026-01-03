@@ -16,7 +16,7 @@ function Websites() {
   const toast = useToast()
   const [viewMode, setViewMode] = useState('executive')
   const [showAddForm, setShowAddForm] = useState(false)
-  const [formData, setFormData] = useState({ name: '', url: '', test_frequency: 'Manual' })
+  const [formData, setFormData] = useState({ name: '', url: '', protocol: 'https://', test_frequency: 'Manual' })
   const [runningTests, setRunningTests] = useState(new Set())
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedWebsiteId, setSelectedWebsiteId] = useState(null)
@@ -41,11 +41,15 @@ function Websites() {
   }, [websites])
 
   const createMutation = useMutation({
-    mutationFn: createWebsite,
+    mutationFn: (data) => {
+      // Combine protocol and URL
+      const fullUrl = data.protocol + data.url.replace(/^(https?:\/\/)/i, '');
+      return createWebsite({ ...data, url: fullUrl });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['websites'])
       setShowAddForm(false)
-      setFormData({ name: '', url: '', test_frequency: 'Manual' })
+      setFormData({ name: '', url: '', protocol: 'https://', test_frequency: 'Manual' })
       toast.success('Website added successfully!')
     },
     onError: (error) => {
@@ -370,14 +374,24 @@ function Websites() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
-              <div className="form-group">
+              <div className="form-group url-group">
                 <label>URL</label>
-                <input
-                  type="url"
-                  placeholder="https://example.com"
-                  value={formData.url}
-                  onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                />
+                <div className="url-input-wrapper">
+                  <select
+                    className="protocol-select"
+                    value={formData.protocol}
+                    onChange={(e) => setFormData({ ...formData, protocol: e.target.value })}
+                  >
+                    <option value="https://">https://</option>
+                    <option value="http://">http://</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="example.com"
+                    value={formData.url}
+                    onChange={(e) => setFormData({ ...formData, url: e.target.value.replace(/^(https?:\/\/)/i, '') })}
+                  />
+                </div>
               </div>
               <div className="form-group">
                 <label>Test Frequency</label>
