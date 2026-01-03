@@ -27,6 +27,9 @@ const app = express();
 const PORT = process.env.PORT || 3004;
 const TEST_API_URL = process.env.TEST_API_URL || 'http://38.97.60.181:3003';
 
+// Trust proxy - required for rate limiting behind reverse proxy (nginx/traefik)
+app.set('trust proxy', true);
+
 // Security middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
