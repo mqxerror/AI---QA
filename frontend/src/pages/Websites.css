@@ -668,7 +668,7 @@ table td {
   background: white;
   border-radius: 16px;
   border: 1px solid #e5e7eb;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .websites-page .websites-table {
@@ -709,6 +709,11 @@ table td {
   font-size: 14px;
   color: #374151;
   vertical-align: middle;
+}
+
+.websites-page .websites-table td:last-child {
+  overflow: visible;
+  padding-right: 24px;
 }
 
 /* Website Info */
@@ -806,24 +811,30 @@ table td {
   display: flex;
   align-items: center;
   gap: 8px;
+  overflow: visible;
+  flex-wrap: nowrap;
 }
 
 .websites-page .action-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border: none;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  min-width: fit-content;
 }
 
 .websites-page .action-btn.primary {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
+  min-width: 70px;
 }
 
 .websites-page .action-btn.primary:hover {

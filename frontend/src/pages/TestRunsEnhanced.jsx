@@ -133,15 +133,20 @@ export default function TestRunsEnhanced() {
       filtered = filtered.filter(run => run.status === 'Pass');
     }
 
-    // Test type filters
-    if (activeFilters.accessibility_only) {
-      filtered = filtered.filter(run => run.test_type === 'Accessibility');
-    }
-    if (activeFilters.performance_only) {
-      filtered = filtered.filter(run => run.test_type === 'Performance');
-    }
-    if (activeFilters.security_only) {
-      filtered = filtered.filter(run => run.test_type === 'Security Scan');
+    // Test type filters - collect all active type filters
+    const activeTypeFilters = [];
+    if (activeFilters.smoke_only) activeTypeFilters.push('Smoke');
+    if (activeFilters.accessibility_only) activeTypeFilters.push('Accessibility');
+    if (activeFilters.performance_only) activeTypeFilters.push('Performance');
+    if (activeFilters.security_scan_only) activeTypeFilters.push('Security Scan');
+    if (activeFilters.load_test_only) activeTypeFilters.push('Load Test');
+    if (activeFilters.visual_regression_only) activeTypeFilters.push('Visual Regression');
+    if (activeFilters.seo_audit_only) activeTypeFilters.push('SEO Audit');
+    if (activeFilters.pixel_audit_only) activeTypeFilters.push('Pixel Audit');
+
+    // Apply type filter if any are selected
+    if (activeTypeFilters.length > 0) {
+      filtered = filtered.filter(run => activeTypeFilters.includes(run.test_type));
     }
 
     // Time filters
@@ -231,9 +236,14 @@ export default function TestRunsEnhanced() {
     { id: 'passed_only', label: 'Passed Only', category: 'Status' },
     { id: 'last_24h', label: 'Last 24 hours', category: 'Time' },
     { id: 'last_7d', label: 'Last 7 days', category: 'Time' },
+    { id: 'smoke_only', label: 'Smoke', category: 'Type' },
     { id: 'accessibility_only', label: 'Accessibility', category: 'Type' },
     { id: 'performance_only', label: 'Performance', category: 'Type' },
-    { id: 'security_only', label: 'Security', category: 'Type' },
+    { id: 'security_scan_only', label: 'Security Scan', category: 'Type' },
+    { id: 'load_test_only', label: 'Load Test', category: 'Type' },
+    { id: 'visual_regression_only', label: 'Visual Regression', category: 'Type' },
+    { id: 'seo_audit_only', label: 'SEO Audit', category: 'Type' },
+    { id: 'pixel_audit_only', label: 'Pixel Audit', category: 'Type' },
   ];
 
   const sortOptions = [
@@ -337,26 +347,55 @@ export default function TestRunsEnhanced() {
           <div className="type-breakdown">
             <h3>Test Coverage by Type</h3>
             <div className="type-cards">
-              {Object.entries(stats.byType).map(([type, data]) => (
-                <div key={type} className="type-card" onClick={() => {
-                  const filterKey = type.toLowerCase().replace(/\s+/g, '_') + '_only';
-                  toggleFilter(filterKey);
-                }}>
-                  <div className="type-name">{type}</div>
-                  <div className="type-stats">
-                    <span className="type-total">{data.total} runs</span>
-                    <span className="type-pass-rate">
-                      {data.total > 0 ? ((data.passed / data.total) * 100).toFixed(0) : 0}% pass
-                    </span>
+              {Object.entries(stats.byType).map(([type, data]) => {
+                // Map test type names to filter keys
+                const typeToFilterKey = {
+                  'Smoke': 'smoke_only',
+                  'Accessibility': 'accessibility_only',
+                  'Performance': 'performance_only',
+                  'Security Scan': 'security_scan_only',
+                  'Load Test': 'load_test_only',
+                  'Visual Regression': 'visual_regression_only',
+                  'SEO Audit': 'seo_audit_only',
+                  'Pixel Audit': 'pixel_audit_only'
+                };
+                const filterKey = typeToFilterKey[type] || type.toLowerCase().replace(/\s+/g, '_') + '_only';
+                const isActive = activeFilters[filterKey];
+
+                return (
+                  <div
+                    key={type}
+                    className={`type-card ${isActive ? 'active' : ''}`}
+                    onClick={() => {
+                      // Clear other type filters and set this one
+                      const newFilters = { ...activeFilters };
+                      // Clear all type filters first
+                      Object.keys(typeToFilterKey).forEach(t => {
+                        delete newFilters[typeToFilterKey[t]];
+                      });
+                      // Set the clicked one if it wasn't active
+                      if (!isActive) {
+                        newFilters[filterKey] = true;
+                      }
+                      setActiveFilters(newFilters);
+                    }}
+                  >
+                    <div className="type-name">{type}</div>
+                    <div className="type-stats">
+                      <span className="type-total">{data.total} runs</span>
+                      <span className="type-pass-rate">
+                        {data.total > 0 ? ((data.passed / data.total) * 100).toFixed(0) : 0}% pass
+                      </span>
+                    </div>
+                    <div className="type-bar">
+                      <div
+                        className="type-bar-fill"
+                        style={{ width: `${data.total > 0 ? (data.passed / data.total) * 100 : 0}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="type-bar">
-                    <div
-                      className="type-bar-fill"
-                      style={{ width: `${data.total > 0 ? (data.passed / data.total) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
