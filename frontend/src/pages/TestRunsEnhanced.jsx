@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getTestRuns, getTestRun } from '../services/api';
-import { RefreshCw, FlaskConical, Search, Filter, SortDesc, ChevronDown, X, LayoutList, LayoutGrid, Eye, RotateCw, GitCompare, AlertTriangle, ChevronRight, Globe } from 'lucide-react';
+import { RefreshCw, FlaskConical, Search, Filter, SortDesc, ChevronDown, X, LayoutList, LayoutGrid, Eye, RotateCw, GitCompare, AlertTriangle, ChevronRight, Globe, Briefcase, Code2, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { useTestResultUpdates } from '../hooks/useRealtimeUpdates';
 import {
-  AnimatedCounter,
   TextShimmer,
   FadeText
 } from '../components/ui';
@@ -16,6 +15,9 @@ export default function TestRunsEnhanced() {
   const [selectedTestRunId, setSelectedTestRunId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalInitialData, setModalInitialData] = useState(null);
+
+  // View mode: 'executive' or 'technical'
+  const [viewMode, setViewMode] = useState('executive');
 
   // Filters and search
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,12 +46,47 @@ export default function TestRunsEnhanced() {
   });
 
   // Calculate stats
-  const stats = useMemo(() => ({
-    total: runs.length,
-    passed: runs.filter(r => r.status === 'Pass').length,
-    failed: runs.filter(r => r.status === 'Fail').length,
-    running: runs.filter(r => r.status === 'Running').length,
-  }), [runs]);
+  const stats = useMemo(() => {
+    const total = runs.length;
+    const passed = runs.filter(r => r.status === 'Pass').length;
+    const failed = runs.filter(r => r.status === 'Fail').length;
+    const running = runs.filter(r => r.status === 'Running').length;
+
+    // Calculate average duration
+    const runsWithDuration = runs.filter(r => r.duration_ms > 0);
+    const avgDuration = runsWithDuration.length > 0
+      ? runsWithDuration.reduce((sum, r) => sum + r.duration_ms, 0) / runsWithDuration.length
+      : 0;
+
+    // Calculate trends (last 24h vs previous 24h)
+    const now = new Date();
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(now - 48 * 60 * 60 * 1000);
+
+    const last24h = runs.filter(r => new Date(r.created_at) > oneDayAgo);
+    const prev24h = runs.filter(r => new Date(r.created_at) > twoDaysAgo && new Date(r.created_at) <= oneDayAgo);
+
+    const last24hPassRate = last24h.length > 0
+      ? (last24h.filter(r => r.status === 'Pass').length / last24h.length) * 100
+      : 0;
+    const prev24hPassRate = prev24h.length > 0
+      ? (prev24h.filter(r => r.status === 'Pass').length / prev24h.length) * 100
+      : 0;
+
+    const trend = last24hPassRate - prev24hPassRate;
+
+    // Test type breakdown
+    const byType = {};
+    runs.forEach(r => {
+      const type = r.test_type || 'Unknown';
+      if (!byType[type]) byType[type] = { total: 0, passed: 0, failed: 0 };
+      byType[type].total++;
+      if (r.status === 'Pass') byType[type].passed++;
+      if (r.status === 'Fail') byType[type].failed++;
+    });
+
+    return { total, passed, failed, running, avgDuration, trend, last24h: last24h.length, byType };
+  }, [runs]);
 
   // Extract unique websites
   const websites = useMemo(() => {
@@ -60,6 +97,12 @@ export default function TestRunsEnhanced() {
   const getPassRate = () => {
     if (stats.total === 0) return 0;
     return Math.round((stats.passed / stats.total) * 100);
+  };
+
+  const formatDuration = (ms) => {
+    if (ms < 1000) return `${Math.round(ms)}ms`;
+    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+    return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`;
   };
 
   // Filter and sort runs
@@ -215,21 +258,21 @@ export default function TestRunsEnhanced() {
           </div>
         </FadeText>
         <div className="header-actions">
-          {/* Density Toggle */}
-          <div className="density-toggle">
+          {/* View Mode Toggle */}
+          <div className="view-mode-toggle">
             <button
-              onClick={() => setDensity('compact')}
-              className={`density-btn ${density === 'compact' ? 'active' : ''}`}
+              onClick={() => setViewMode('executive')}
+              className={`view-mode-btn ${viewMode === 'executive' ? 'active' : ''}`}
             >
-              <LayoutList size={16} />
-              Compact
+              <Briefcase size={16} />
+              Executive
             </button>
             <button
-              onClick={() => setDensity('comfortable')}
-              className={`density-btn ${density === 'comfortable' ? 'active' : ''}`}
+              onClick={() => setViewMode('technical')}
+              className={`view-mode-btn ${viewMode === 'technical' ? 'active' : ''}`}
             >
-              <LayoutGrid size={16} />
-              Comfortable
+              <Code2 size={16} />
+              Technical
             </button>
           </div>
           <button onClick={() => refetch()} className="refresh-btn">
@@ -239,30 +282,134 @@ export default function TestRunsEnhanced() {
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="stats-row">
-        <div className="stat-card clickable" onClick={clearFilters}>
-          <div className="stat-value"><AnimatedCounter value={stats.total} /></div>
-          <div className="stat-label">Total Runs</div>
-        </div>
-        <div className="stat-card stat-success clickable" onClick={() => setActiveFilters({ passed_only: true })}>
-          <div className="stat-value"><AnimatedCounter value={stats.passed} /></div>
-          <div className="stat-label">Passed</div>
-          <div className="stat-progress"><div className="progress-bar" style={{ width: `${getPassRate()}%` }}></div></div>
-          <div className="stat-meta">{getPassRate()}% pass rate</div>
-        </div>
-        <div className="stat-card stat-failure clickable" onClick={() => setActiveFilters({ failed_only: true })}>
-          <div className="stat-value"><AnimatedCounter value={stats.failed} /></div>
-          <div className="stat-label">Failed</div>
-        </div>
-        {stats.running > 0 && (
-          <div className="stat-card stat-running">
-            <div className="stat-value"><AnimatedCounter value={stats.running} /><span className="live-indicator"></span></div>
-            <div className="stat-label">Running</div>
-            <div className="stat-meta">Live</div>
+      {/* Executive View - High-level KPIs */}
+      {viewMode === 'executive' && (
+        <div className="executive-view">
+          <div className="kpi-grid">
+            <div className="kpi-card primary" onClick={clearFilters}>
+              <div className="kpi-icon"><FlaskConical size={24} /></div>
+              <div className="kpi-content">
+                <div className="kpi-value">{stats.total}</div>
+                <div className="kpi-label">Total Test Runs</div>
+                <div className="kpi-meta">{stats.last24h} in last 24h</div>
+              </div>
+            </div>
+            <div className="kpi-card success" onClick={() => setActiveFilters({ passed_only: true })}>
+              <div className="kpi-icon success"><TrendingUp size={24} /></div>
+              <div className="kpi-content">
+                <div className="kpi-value">{getPassRate()}%</div>
+                <div className="kpi-label">Pass Rate</div>
+                <div className="kpi-trend">
+                  {stats.trend > 0 ? (
+                    <span className="trend-up"><TrendingUp size={14} /> +{stats.trend.toFixed(1)}%</span>
+                  ) : stats.trend < 0 ? (
+                    <span className="trend-down"><TrendingDown size={14} /> {stats.trend.toFixed(1)}%</span>
+                  ) : (
+                    <span className="trend-neutral">No change</span>
+                  )}
+                </div>
+              </div>
+              <div className="kpi-progress">
+                <div className="progress-track">
+                  <div className="progress-fill" style={{ width: `${getPassRate()}%` }}></div>
+                </div>
+              </div>
+            </div>
+            <div className="kpi-card danger" onClick={() => setActiveFilters({ failed_only: true })}>
+              <div className="kpi-icon danger"><AlertTriangle size={24} /></div>
+              <div className="kpi-content">
+                <div className="kpi-value">{stats.failed}</div>
+                <div className="kpi-label">Failed Tests</div>
+                <div className="kpi-meta">{stats.total > 0 ? ((stats.failed / stats.total) * 100).toFixed(1) : 0}% failure rate</div>
+              </div>
+            </div>
+            <div className="kpi-card info">
+              <div className="kpi-icon info"><Clock size={24} /></div>
+              <div className="kpi-content">
+                <div className="kpi-value">{formatDuration(stats.avgDuration)}</div>
+                <div className="kpi-label">Avg Duration</div>
+                <div className="kpi-meta">Per test run</div>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Test Type Breakdown for Executive */}
+          <div className="type-breakdown">
+            <h3>Test Coverage by Type</h3>
+            <div className="type-cards">
+              {Object.entries(stats.byType).map(([type, data]) => (
+                <div key={type} className="type-card" onClick={() => {
+                  const filterKey = type.toLowerCase().replace(/\s+/g, '_') + '_only';
+                  toggleFilter(filterKey);
+                }}>
+                  <div className="type-name">{type}</div>
+                  <div className="type-stats">
+                    <span className="type-total">{data.total} runs</span>
+                    <span className="type-pass-rate">
+                      {data.total > 0 ? ((data.passed / data.total) * 100).toFixed(0) : 0}% pass
+                    </span>
+                  </div>
+                  <div className="type-bar">
+                    <div
+                      className="type-bar-fill"
+                      style={{ width: `${data.total > 0 ? (data.passed / data.total) * 100 : 0}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Technical View - Detailed Stats */}
+      {viewMode === 'technical' && (
+        <div className="technical-view">
+          <div className="stats-row">
+            <div className="stat-card clickable" onClick={clearFilters}>
+              <div className="stat-value">{stats.total}</div>
+              <div className="stat-label">Total Runs</div>
+            </div>
+            <div className="stat-card stat-success clickable" onClick={() => setActiveFilters({ passed_only: true })}>
+              <div className="stat-value">{stats.passed}</div>
+              <div className="stat-label">Passed</div>
+              <div className="stat-progress"><div className="progress-bar" style={{ width: `${getPassRate()}%` }}></div></div>
+              <div className="stat-meta">{getPassRate()}% pass rate</div>
+            </div>
+            <div className="stat-card stat-failure clickable" onClick={() => setActiveFilters({ failed_only: true })}>
+              <div className="stat-value">{stats.failed}</div>
+              <div className="stat-label">Failed</div>
+            </div>
+            {stats.running > 0 && (
+              <div className="stat-card stat-running">
+                <div className="stat-value">{stats.running}<span className="live-indicator"></span></div>
+                <div className="stat-label">Running</div>
+                <div className="stat-meta">Live</div>
+              </div>
+            )}
+          </div>
+
+          {/* Density Toggle for Technical View */}
+          <div className="technical-controls">
+            <div className="density-toggle">
+              <button
+                onClick={() => setDensity('compact')}
+                className={`density-btn ${density === 'compact' ? 'active' : ''}`}
+              >
+                <LayoutList size={16} />
+                Compact
+              </button>
+              <button
+                onClick={() => setDensity('comfortable')}
+                className={`density-btn ${density === 'comfortable' ? 'active' : ''}`}
+              >
+                <LayoutGrid size={16} />
+                Comfortable
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Optimized Filters Bar */}
       <div className="filters-bar-v2">

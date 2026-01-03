@@ -1,55 +1,214 @@
-/* Tabler UI Dashboard - Custom Styles */
+/* QA Dashboard - Custom Styles */
 
-/* Ensure proper layout */
+/* ========== Page Layout ========== */
 .page {
   display: flex;
   min-height: 100vh;
+  background: #f8fafc;
 }
 
-/* Custom navbar brand styling */
+/* ========== Sidebar Navigation ========== */
+.navbar.navbar-vertical {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.navbar.navbar-vertical .container-fluid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px 16px;
+}
+
+/* Brand */
+.navbar-brand {
+  padding: 0 8px;
+  margin-bottom: 24px;
+}
+
 .navbar-brand-image {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  white-space: nowrap;
 }
 
-/* Custom active state for nav items */
-.navbar-vertical .nav-item.active .nav-link {
-  background: rgba(98, 116, 241, 0.1);
-  color: #6274f1;
+/* Navigation Items */
+.navbar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.navbar-vertical .nav-item.active .nav-link-icon {
-  color: #6274f1;
+.nav-item {
+  display: block;
 }
 
-/* Smooth transitions */
-.nav-link {
+.nav-item .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  color: #94a3b8;
+  text-decoration: none;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.nav-link:hover {
-  background: rgba(98, 116, 241, 0.05);
+.nav-item .nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
 }
 
-/* Page wrapper */
-.page-wrapper {
-  flex: 1;
-  min-width: 0;
+.nav-item.active .nav-link {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(52, 211, 153, 0.1) 100%);
+  color: #10b981;
 }
 
-/* Container spacing */
-.container-xl {
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-}
-
-/* Logout button */
-.btn-danger {
+.nav-link-icon {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.nav-link-title {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* User section at bottom */
+.navbar-nav.mt-auto {
+  margin-top: auto !important;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navbar-nav.mt-auto .nav-item {
+  margin-bottom: 8px;
+}
+
+.navbar-nav.mt-auto .nav-link {
+  padding: 8px 12px;
+}
+
+.navbar-nav.mt-auto .d-none.d-xl-block {
+  display: block !important;
+}
+
+.navbar-nav.mt-auto .d-none.d-xl-block div {
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Logout Button */
+.btn.btn-danger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn.btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+}
+
+/* ========== Page Wrapper ========== */
+.page-wrapper {
+  flex: 1;
+  margin-left: 260px;
+  min-width: 0;
+  background: #f8fafc;
+}
+
+.page-body {
+  padding: 0;
+}
+
+.container-xl {
+  max-width: 1400px;
+  padding: 24px 32px;
+  margin: 0 auto;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 991px) {
+  .navbar.navbar-vertical {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+
+  .navbar.navbar-vertical .container-fluid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+  }
+
+  .navbar-brand {
+    margin-bottom: 0;
+  }
+
+  .navbar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .nav-item .nav-link {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .nav-link-title {
+    display: none;
+  }
+
+  .navbar-nav.mt-auto {
+    margin-top: 12px !important;
+    padding-top: 12px;
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .page-wrapper {
+    margin-left: 0;
+  }
+
+  .container-xl {
+    padding: 16px;
+  }
 }
