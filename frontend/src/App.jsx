@@ -6,8 +6,6 @@ import {
   IconLayoutDashboard,
   IconWorld,
   IconFlask,
-  IconAlertTriangle,
-  IconActivity,
   IconSettings,
   IconHelp,
   IconLogout
@@ -16,9 +14,6 @@ import NewDashboard from './pages/NewDashboard'
 import Websites from './pages/Websites'
 import TestRuns from './pages/TestRunsEnhanced'
 import SystemStatus from './pages/SystemStatus'
-import ActivityLog from './pages/ActivityLog'
-import ProcessMonitor from './pages/ProcessMonitor'
-import FailureManager from './pages/FailureManager'
 import Help from './pages/Help'
 import Login from './pages/Login'
 import './App.css'
@@ -104,42 +99,6 @@ function Layout() {
             </Link>
 
             <Link
-              to="/failures"
-              className={`nav-item ${location.pathname === '/failures' ? 'active' : ''}`}
-            >
-              <span className="nav-link">
-                <span className="nav-link-icon d-md-none d-lg-inline-block">
-                  <IconAlertTriangle size={24} stroke={1.5} />
-                </span>
-                <span className="nav-link-title">Failures</span>
-              </span>
-            </Link>
-
-            <Link
-              to="/activities"
-              className={`nav-item ${location.pathname === '/activities' ? 'active' : ''}`}
-            >
-              <span className="nav-link">
-                <span className="nav-link-icon d-md-none d-lg-inline-block">
-                  <IconActivity size={24} stroke={1.5} />
-                </span>
-                <span className="nav-link-title">Activity Log</span>
-              </span>
-            </Link>
-
-            <Link
-              to="/processes"
-              className={`nav-item ${location.pathname === '/processes' ? 'active' : ''}`}
-            >
-              <span className="nav-link">
-                <span className="nav-link-icon d-md-none d-lg-inline-block">
-                  <IconActivity size={24} stroke={1.5} />
-                </span>
-                <span className="nav-link-title">Processes</span>
-              </span>
-            </Link>
-
-            <Link
               to="/status"
               className={`nav-item ${location.pathname === '/status' ? 'active' : ''}`}
             >
@@ -188,9 +147,6 @@ function Layout() {
               <Route path="/" element={<PageTransition><NewDashboard /></PageTransition>} />
               <Route path="/websites" element={<PageTransition><Websites /></PageTransition>} />
               <Route path="/test-runs" element={<PageTransition><TestRuns /></PageTransition>} />
-              <Route path="/failures" element={<PageTransition><FailureManager /></PageTransition>} />
-              <Route path="/activities" element={<PageTransition><ActivityLog /></PageTransition>} />
-              <Route path="/processes" element={<PageTransition><ProcessMonitor /></PageTransition>} />
               <Route path="/status" element={<PageTransition><SystemStatus /></PageTransition>} />
               <Route path="/help" element={<PageTransition><Help /></PageTransition>} />
             </Routes>

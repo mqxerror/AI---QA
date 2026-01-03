@@ -1,13 +1,11 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getWebsites, createWebsite, deleteWebsite, runSmokeTest, runPerformanceTest, runPixelAudit, runLoadTest, runAccessibilityTest, runSecurityScan, runSEOAudit, runVisualRegression } from '../services/api'
-import { Play, Trash2, Plus, Globe } from 'lucide-react'
+import { Play, Trash2, Plus, Globe, Briefcase, Code2, RefreshCw, TrendingUp, CheckCircle, XCircle, Clock, Activity } from 'lucide-react'
 import {
-  AnimatedCounter,
-  TextGenerateEffect,
-  ScrollReveal,
+  TextShimmer,
   FadeText,
-  FlipWords
+  ScrollReveal
 } from '../components/ui'
 import { useToast } from '../contexts/ToastContext'
 import TestDrawer from '../components/TestDrawer'
@@ -16,17 +14,31 @@ import './Websites.css'
 function Websites() {
   const queryClient = useQueryClient()
   const toast = useToast()
+  const [viewMode, setViewMode] = useState('executive')
   const [showAddForm, setShowAddForm] = useState(false)
   const [formData, setFormData] = useState({ name: '', url: '', test_frequency: 'Manual' })
   const [runningTests, setRunningTests] = useState(new Set())
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedWebsiteId, setSelectedWebsiteId] = useState(null)
 
-  const { data: websites, isLoading } = useQuery({
+  const { data: websites = [], isLoading, refetch } = useQuery({
     queryKey: ['websites'],
     queryFn: () => getWebsites().then(res => res.data),
     refetchInterval: 10000
   })
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    const total = websites.length
+    const active = websites.filter(w => w.status === 'Active').length
+    const totalTests = websites.reduce((sum, w) => sum + (w.total_tests || 0), 0)
+    const passed = websites.filter(w => w.last_result === 'Pass').length
+    const failed = websites.filter(w => w.last_result === 'Fail').length
+    const untested = websites.filter(w => !w.last_result).length
+    const passRate = (passed + failed) > 0 ? Math.round((passed / (passed + failed)) * 100) : 0
+
+    return { total, active, totalTests, passed, failed, untested, passRate }
+  }, [websites])
 
   const createMutation = useMutation({
     mutationFn: createWebsite,
@@ -52,7 +64,6 @@ function Websites() {
     }
   })
 
-  // Helper to extract error message from axios error
   const getErrorMessage = (error) => {
     return error.response?.data?.error || error.response?.data?.message || error.message || 'An unexpected error occurred';
   }
@@ -115,7 +126,7 @@ function Websites() {
   const handleRunLoadTest = async (websiteId) => {
     setRunningTests(prev => new Set(prev).add(`load-${websiteId}`))
     try {
-      await runLoadTest(websiteId, 10, 30) // 10 VUs, 30 seconds
+      await runLoadTest(websiteId, 10, 30)
       queryClient.invalidateQueries(['websites'])
       queryClient.invalidateQueries(['test-runs'])
       queryClient.invalidateQueries(['stats'])
@@ -185,9 +196,7 @@ function Websites() {
   }
 
   const handleRunVisualRegression = async (websiteId) => {
-    // Ask if user wants to create baseline
     const createBaseline = confirm('Create new baseline images? (Click Cancel to compare against existing baseline)')
-
     setRunningTests(prev => new Set(prev).add(`visual-${websiteId}`))
     try {
       await runVisualRegression(websiteId, createBaseline)
@@ -228,58 +237,151 @@ function Websites() {
     setModalOpen(true)
   }
 
-  if (isLoading) return <div className="loading">Loading...</div>
+  if (isLoading) return <div className="loading">Loading websites...</div>
 
   return (
-    <div style={{ position: 'relative' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', position: 'relative', zIndex: 10 }}>
-        <div>
-          <TextGenerateEffect words="Websites" className="dashboard-title" />
-          <FadeText direction="right">
-            <p style={{ margin: '8px 0 0 0', color: '#6b7280', fontSize: '14px' }}>
-              Manage and monitor your websites • <FlipWords words={["Run Tests", "Track Performance", "Ensure Quality"]} className="inline-flip" />
-            </p>
-          </FadeText>
+    <div className="websites-page">
+      {/* Header */}
+      <div className="page-header">
+        <FadeText direction="down">
+          <div>
+            <TextShimmer className="title-shimmer">
+              <h1>Websites</h1>
+            </TextShimmer>
+            <p>Manage and test your websites</p>
+          </div>
+        </FadeText>
+        <div className="header-actions">
+          <div className="view-mode-toggle">
+            <button
+              onClick={() => setViewMode('executive')}
+              className={`view-mode-btn ${viewMode === 'executive' ? 'active' : ''}`}
+            >
+              <Briefcase size={16} />
+              Executive
+            </button>
+            <button
+              onClick={() => setViewMode('technical')}
+              className={`view-mode-btn ${viewMode === 'technical' ? 'active' : ''}`}
+            >
+              <Code2 size={16} />
+              Technical
+            </button>
+          </div>
+          <button onClick={() => refetch()} className="refresh-btn">
+            <RefreshCw size={16} />
+            Refresh
+          </button>
+          <button className="add-btn" onClick={() => setShowAddForm(!showAddForm)}>
+            <Plus size={16} />
+            Add Website
+          </button>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowAddForm(!showAddForm)}>
-          <Plus size={16} style={{ display: 'inline', marginRight: '5px' }} />
-          Add Website
-        </button>
       </div>
 
+      {/* Executive View - KPIs */}
+      {viewMode === 'executive' && (
+        <div className="executive-view">
+          <ScrollReveal delay={0.1} direction="up">
+            <div className="kpi-grid">
+              <div className="kpi-card primary">
+                <div className="kpi-icon"><Globe size={24} /></div>
+                <div className="kpi-content">
+                  <div className="kpi-value">{stats.total}</div>
+                  <div className="kpi-label">Total Websites</div>
+                  <div className="kpi-meta">{stats.active} active</div>
+                </div>
+              </div>
+              <div className="kpi-card success">
+                <div className="kpi-icon success"><TrendingUp size={24} /></div>
+                <div className="kpi-content">
+                  <div className="kpi-value">{stats.passRate}%</div>
+                  <div className="kpi-label">Pass Rate</div>
+                  <div className="kpi-meta">{stats.passed} passing</div>
+                </div>
+                <div className="kpi-progress">
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${stats.passRate}%` }}></div>
+                  </div>
+                </div>
+              </div>
+              <div className="kpi-card danger">
+                <div className="kpi-icon danger"><XCircle size={24} /></div>
+                <div className="kpi-content">
+                  <div className="kpi-value">{stats.failed}</div>
+                  <div className="kpi-label">Failing</div>
+                  <div className="kpi-meta">{stats.untested} untested</div>
+                </div>
+              </div>
+              <div className="kpi-card info">
+                <div className="kpi-icon info"><Activity size={24} /></div>
+                <div className="kpi-content">
+                  <div className="kpi-value">{stats.totalTests}</div>
+                  <div className="kpi-label">Total Tests</div>
+                  <div className="kpi-meta">All time</div>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      )}
+
+      {/* Technical View - Compact Stats */}
+      {viewMode === 'technical' && (
+        <div className="technical-view">
+          <ScrollReveal delay={0.1} direction="up">
+            <div className="stats-row">
+              <div className="stat-card">
+                <div className="stat-value">{stats.total}</div>
+                <div className="stat-label">Websites</div>
+              </div>
+              <div className="stat-card stat-success">
+                <div className="stat-value">{stats.passed}</div>
+                <div className="stat-label">Passing</div>
+              </div>
+              <div className="stat-card stat-failure">
+                <div className="stat-value">{stats.failed}</div>
+                <div className="stat-label">Failing</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{stats.totalTests}</div>
+                <div className="stat-label">Tests Run</div>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      )}
+
+      {/* Add Website Form */}
       {showAddForm && (
         <ScrollReveal delay={0.1} direction="up">
-          <div className="card mb-3">
-            <div className="card-header">
-              <h3 className="card-title">Add New Website</h3>
+          <div className="add-website-form">
+            <div className="form-header">
+              <h3>Add New Website</h3>
+              <button className="close-btn" onClick={() => setShowAddForm(false)}>×</button>
             </div>
-            <div className="card-body">
-              <div className="mb-3">
-                <label className="form-label required">Website Name</label>
+            <div className="form-body">
+              <div className="form-group">
+                <label>Website Name</label>
                 <input
                   type="text"
-                  className="form-control"
-                  placeholder="Enter website name (e.g., Google)"
+                  placeholder="e.g., Google"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
-                <small className="form-hint">A friendly name to identify this website</small>
               </div>
-              <div className="mb-3">
-                <label className="form-label required">URL</label>
+              <div className="form-group">
+                <label>URL</label>
                 <input
                   type="url"
-                  className="form-control"
                   placeholder="https://example.com"
                   value={formData.url}
                   onChange={(e) => setFormData({ ...formData, url: e.target.value })}
                 />
-                <small className="form-hint">Full URL including https://</small>
               </div>
-              <div className="mb-3">
-                <label className="form-label">Test Frequency</label>
+              <div className="form-group">
+                <label>Test Frequency</label>
                 <select
-                  className="form-select"
                   value={formData.test_frequency}
                   onChange={(e) => setFormData({ ...formData, test_frequency: e.target.value })}
                 >
@@ -287,118 +389,114 @@ function Websites() {
                   <option>Daily</option>
                   <option>Weekly</option>
                 </select>
-                <small className="form-hint">How often to run automated tests</small>
               </div>
             </div>
-            <div className="card-footer">
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-primary"
-                  onClick={() => createMutation.mutate(formData)}
-                  disabled={!formData.name || !formData.url}
-                >
-                  <Plus size={16} className="me-1" />
-                  Add Website
-                </button>
-                <button className="btn btn-outline-secondary" onClick={() => setShowAddForm(false)}>
-                  Cancel
-                </button>
-              </div>
+            <div className="form-footer">
+              <button className="btn-cancel" onClick={() => setShowAddForm(false)}>Cancel</button>
+              <button
+                className="btn-submit"
+                onClick={() => createMutation.mutate(formData)}
+                disabled={!formData.name || !formData.url}
+              >
+                Add Website
+              </button>
             </div>
           </div>
         </ScrollReveal>
       )}
 
+      {/* Websites Table */}
       <ScrollReveal delay={0.2} direction="up">
-        <div className="card">
-          {websites?.length === 0 ? (
+        <div className="websites-table-container">
+          {websites.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-state-icon">
-                <Globe size={64} color="#10b981" />
-              </div>
-              <FadeText direction="up">
-                <p>No websites yet. Add your first website to start testing.</p>
-              </FadeText>
+              <Globe size={48} />
+              <p>No websites yet</p>
+              <p className="text-muted">Add your first website to start testing</p>
+              <button className="btn-add-first" onClick={() => setShowAddForm(true)}>
+                <Plus size={16} /> Add Website
+              </button>
             </div>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-vcenter card-table">
-                <thead>
-                  <tr>
-                    <th>Website</th>
-                    <th>Status</th>
-                    <th>Last Result</th>
-                    <th>Last Tested</th>
-                    <th>Tests</th>
-                    <th className="w-1"></th>
+            <table className="websites-table">
+              <thead>
+                <tr>
+                  <th>Website</th>
+                  <th>Status</th>
+                  <th>Last Result</th>
+                  <th>Tests</th>
+                  <th>Last Tested</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {websites.map((website) => (
+                  <tr key={website.id}>
+                    <td>
+                      <div className="website-info">
+                        <span className="website-avatar">
+                          {website.name.substring(0, 2).toUpperCase()}
+                        </span>
+                        <div>
+                          <div className="website-name">{website.name}</div>
+                          <div className="website-url">{website.url}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${website.status === 'Active' ? 'active' : 'inactive'}`}>
+                        {website.status}
+                      </span>
+                    </td>
+                    <td>
+                      {website.last_result ? (
+                        <span className={`result-badge ${website.last_result === 'Pass' ? 'pass' : 'fail'}`}>
+                          {website.last_result === 'Pass' ? <CheckCircle size={14} /> : <XCircle size={14} />}
+                          {website.last_result}
+                        </span>
+                      ) : (
+                        <span className="result-badge untested">Not tested</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className="tests-count">{website.total_tests || 0}</span>
+                    </td>
+                    <td className="time-cell">
+                      {website.last_tested_at ? (
+                        new Date(website.last_tested_at).toLocaleString('en-US', {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })
+                      ) : (
+                        'Never'
+                      )}
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button
+                          className="action-btn primary"
+                          onClick={() => openModal(website)}
+                          title="Run Tests"
+                        >
+                          <Play size={14} />
+                          Run
+                        </button>
+                        <button
+                          className="action-btn danger"
+                          onClick={() => {
+                            if (confirm(`Delete "${website.name}"?\n\nThis will permanently remove the website and all its test history.`)) {
+                              deleteMutation.mutate(website.id)
+                            }
+                          }}
+                          title="Delete"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {websites?.map((website, idx) => (
-                    <tr key={website.id}>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <span className="avatar avatar-sm me-2" style={{ background: 'var(--tblr-primary)', color: 'white' }}>
-                            {website.name.substring(0, 2).toUpperCase()}
-                          </span>
-                          <div>
-                            <div className="fw-bold">{website.name}</div>
-                            <div className="text-muted small">{website.url}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`badge bg-${website.status === 'Active' ? 'success' : 'warning'}`}>
-                          {website.status}
-                        </span>
-                      </td>
-                      <td>
-                        {website.last_result ? (
-                          <span className={`badge bg-${website.last_result === 'Pass' ? 'success' : 'danger'}`}>
-                            {website.last_result}
-                          </span>
-                        ) : (
-                          <span className="text-muted">Not tested</span>
-                        )}
-                      </td>
-                      <td className="text-muted">
-                        {website.last_tested_at ? (
-                          new Date(website.last_tested_at).toLocaleString()
-                        ) : (
-                          'Never'
-                        )}
-                      </td>
-                      <td>
-                        <span className="badge bg-azure-lt">
-                          <AnimatedCounter value={website.total_tests || 0} />
-                        </span>
-                      </td>
-                      <td>
-                        <div className="btn-list">
-                          <button
-                            className="btn btn-sm btn-primary"
-                            onClick={() => openModal(website)}
-                          >
-                            <Play size={14} className="me-1" />
-                            Run
-                          </button>
-                          <button
-                            className="btn btn-sm btn-ghost-danger"
-                            onClick={() => {
-                              if (confirm(`⚠️ Delete "${website.name}"?\n\nThis will permanently remove the website and all its test history.\n\nThis action cannot be undone.`)) {
-                                deleteMutation.mutate(website.id)
-                              }
-                            }}
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </ScrollReveal>
