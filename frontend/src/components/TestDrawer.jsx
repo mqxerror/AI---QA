@@ -1,112 +1,126 @@
 import { useState } from 'react'
 import {
-  IconX,
-  IconRocket,
-  IconAccessible,
-  IconBolt,
-  IconChartBar,
-  IconShield,
-  IconSeo,
-  IconPhoto,
-  IconPalette,
-  IconPlayerPlay,
-  IconLoader2
-} from '@tabler/icons-react'
+  Rocket,
+  Accessibility,
+  Zap,
+  BarChart3,
+  Shield,
+  Search,
+  Camera,
+  Palette,
+  Play,
+  X,
+  Clock,
+  Globe,
+  ExternalLink,
+  Loader2,
+  CheckCircle
+} from 'lucide-react'
 import './TestDrawer.css'
 
 const testTypes = [
   {
     id: 'smoke',
-    name: 'Smoke Test',
-    description: 'Quick health check - verify basic functionality and critical paths',
-    duration: '3-5s',
+    name: 'Smoke',
+    fullName: 'Smoke Test',
+    description: 'Basic functionality check',
+    duration: '~5s',
     tool: 'Playwright',
-    icon: IconRocket,
+    icon: Rocket,
     color: '#3b82f6',
-    category: 'Quick Tests'
+    bgColor: '#eff6ff',
+    category: 'quick'
   },
   {
     id: 'accessibility',
-    name: 'Accessibility Test',
-    description: 'WCAG 2.1 AA compliance - screen readers and keyboard navigation',
-    duration: '10-15s',
+    name: 'A11y',
+    fullName: 'Accessibility Test',
+    description: 'WCAG 2.1 AA compliance',
+    duration: '~15s',
     tool: 'Axe-core',
-    icon: IconAccessible,
+    icon: Accessibility,
     color: '#10b981',
-    category: 'Quick Tests'
+    bgColor: '#ecfdf5',
+    category: 'quick'
   },
   {
     id: 'performance',
-    name: 'Performance Test',
-    description: 'Lighthouse audit - load time, FCP, LCP, and Core Web Vitals',
-    duration: '30-60s',
+    name: 'Perf',
+    fullName: 'Performance Test',
+    description: 'Core Web Vitals & Lighthouse',
+    duration: '~45s',
     tool: 'Lighthouse',
-    icon: IconBolt,
+    icon: Zap,
     color: '#f59e0b',
-    category: 'Performance'
+    bgColor: '#fef3c7',
+    category: 'performance'
   },
   {
     id: 'load',
-    name: 'Load Test',
-    description: 'Stress test with concurrent users - capacity and response time',
-    duration: '60-90s',
+    name: 'Load',
+    fullName: 'Load Test',
+    description: 'Stress test with VUs',
+    duration: '~90s',
     tool: 'K6',
-    icon: IconChartBar,
+    icon: BarChart3,
     color: '#8b5cf6',
-    category: 'Performance'
+    bgColor: '#f5f3ff',
+    category: 'performance'
   },
   {
     id: 'security',
-    name: 'Security Scan',
-    description: 'OWASP vulnerability scan - XSS, SQL injection, security headers',
-    duration: '45-60s',
-    tool: 'ZAP',
-    icon: IconShield,
+    name: 'Security',
+    fullName: 'Security Scan',
+    description: 'OWASP vulnerabilities',
+    duration: '~60s',
+    tool: 'Custom',
+    icon: Shield,
     color: '#ef4444',
-    category: 'Security'
+    bgColor: '#fef2f2',
+    category: 'security'
   },
   {
     id: 'seo',
-    name: 'SEO Audit',
-    description: 'Meta tags, structured data, sitemap, and search optimization',
-    duration: '20-30s',
+    name: 'SEO',
+    fullName: 'SEO Audit',
+    description: 'Meta tags & structure',
+    duration: '~25s',
     tool: 'Lighthouse',
-    icon: IconSeo,
+    icon: Search,
     color: '#06b6d4',
-    category: 'SEO'
+    bgColor: '#ecfeff',
+    category: 'seo'
   },
   {
     id: 'visual',
-    name: 'Visual Regression',
-    description: 'Screenshot comparison - detect unintended visual changes',
-    duration: '15-25s',
-    tool: 'Percy/BackstopJS',
-    icon: IconPhoto,
+    name: 'Visual',
+    fullName: 'Visual Regression',
+    description: 'Screenshot comparison',
+    duration: '~20s',
+    tool: 'Playwright',
+    icon: Camera,
     color: '#ec4899',
-    category: 'Visual'
+    bgColor: '#fdf2f8',
+    category: 'visual'
   },
   {
     id: 'pixel',
-    name: 'Pixel Perfect Audit',
-    description: 'Design precision check - compare against reference mockups',
-    duration: '20-30s',
-    tool: 'BackstopJS',
-    icon: IconPalette,
+    name: 'Pixel',
+    fullName: 'Pixel Audit',
+    description: 'Tracking pixels check',
+    duration: '~25s',
+    tool: 'Playwright',
+    icon: Palette,
     color: '#14b8a6',
-    category: 'Visual'
+    bgColor: '#f0fdfa',
+    category: 'visual'
   }
 ]
 
 export default function TestDrawer({ isOpen, onClose, websiteId, websiteName, websiteUrl, runningTests, onRunTest }) {
-  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [hoveredTest, setHoveredTest] = useState(null)
 
   if (!isOpen) return null
-
-  const categories = ['all', ...new Set(testTypes.map(t => t.category))]
-
-  const filteredTests = selectedCategory === 'all'
-    ? testTypes
-    : testTypes.filter(t => t.category === selectedCategory)
 
   const handleTestClick = (testId) => {
     onRunTest(testId, websiteId)
@@ -119,165 +133,150 @@ export default function TestDrawer({ isOpen, onClose, websiteId, websiteName, we
   }
 
   const totalRunning = runningTests ? runningTests.size : 0
+  const completedTests = 0 // Could track this if needed
 
   return (
     <>
       {/* Backdrop */}
-      <div className="modal-backdrop fade show" onClick={onClose}></div>
+      <div className="test-drawer-backdrop" onClick={onClose} />
 
-      {/* Offcanvas Drawer */}
-      <div className="offcanvas offcanvas-end show" tabIndex="-1" style={{ visibility: 'visible', width: '600px' }}>
+      {/* Drawer Panel */}
+      <div className="test-drawer">
         {/* Header */}
-        <div className="offcanvas-header">
-          <h3 className="offcanvas-title">
-            <IconPlayerPlay size={24} className="me-2" style={{ color: 'var(--tblr-primary)' }} />
-            Run Quality Tests
-            {totalRunning > 0 && (
-              <span className="badge bg-primary ms-2">{totalRunning} Running</span>
-            )}
-          </h3>
-          <button
-            type="button"
-            className="btn-close"
-            onClick={onClose}
-            aria-label="Close"
-          ></button>
+        <div className="test-drawer-header">
+          <div className="header-content">
+            <div className="header-icon">
+              <Play size={20} />
+            </div>
+            <div className="header-text">
+              <h2>Run Tests</h2>
+              <p>Select tests to run on this website</p>
+            </div>
+          </div>
+          <button className="close-btn" onClick={onClose}>
+            <X size={20} />
+          </button>
         </div>
 
-        {/* Website Info */}
-        <div className="offcanvas-body p-0">
-          <div className="alert alert-info mx-3 mt-3 mb-0" style={{ background: 'rgba(var(--tblr-primary-rgb), 0.1)', border: '1px solid rgba(var(--tblr-primary-rgb), 0.2)' }}>
-            <div className="d-flex align-items-center">
-              <div>
-                <strong className="text-primary">{websiteName}</strong>
-                <div className="text-muted small">{websiteUrl}</div>
-              </div>
-            </div>
+        {/* Website Info Card */}
+        <div className="website-info-card">
+          <div className="website-avatar">
+            {websiteName?.substring(0, 2).toUpperCase() || 'WS'}
           </div>
+          <div className="website-details">
+            <h3>{websiteName || 'Website'}</h3>
+            <a href={websiteUrl} target="_blank" rel="noopener noreferrer" className="website-link">
+              <Globe size={12} />
+              {websiteUrl}
+              <ExternalLink size={12} />
+            </a>
+          </div>
+          {totalRunning > 0 && (
+            <div className="running-badge">
+              <Loader2 size={14} className="spin" />
+              {totalRunning} Running
+            </div>
+          )}
+        </div>
 
-          {/* Category Filter Pills */}
-          <div className="px-3 pt-3 pb-2">
-            <div className="btn-group w-100" role="group">
-              {categories.map(category => (
+        {/* Quick Stats */}
+        <div className="test-stats">
+          <div className="stat-item">
+            <span className="stat-value">{testTypes.length}</span>
+            <span className="stat-label">Available</span>
+          </div>
+          <div className="stat-item running">
+            <span className="stat-value">{totalRunning}</span>
+            <span className="stat-label">Running</span>
+          </div>
+          <div className="stat-item success">
+            <span className="stat-value">{completedTests}</span>
+            <span className="stat-label">Complete</span>
+          </div>
+        </div>
+
+        {/* Test Grid */}
+        <div className="test-grid-container">
+          <div className="test-grid">
+            {testTypes.map(test => {
+              const isRunning = runningTests?.has(`${test.id}-${websiteId}`)
+              const Icon = test.icon
+              const isHovered = hoveredTest === test.id
+
+              return (
                 <button
-                  key={category}
-                  type="button"
-                  className={`btn btn-sm ${selectedCategory === category ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => setSelectedCategory(category)}
+                  key={test.id}
+                  className={`test-card ${isRunning ? 'running' : ''} ${isHovered ? 'hovered' : ''}`}
+                  onClick={() => !isRunning && handleTestClick(test.id)}
+                  onMouseEnter={() => setHoveredTest(test.id)}
+                  onMouseLeave={() => setHoveredTest(null)}
+                  disabled={isRunning}
+                  style={{
+                    '--test-color': test.color,
+                    '--test-bg': test.bgColor
+                  }}
                 >
-                  {category === 'all' ? 'All Tests' : category}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Test Cards */}
-          <div className="px-3 pb-3" style={{ maxHeight: 'calc(100vh - 300px)', overflowY: 'auto' }}>
-            <div className="row g-3 mt-1">
-              {filteredTests.map(test => {
-                const isRunning = runningTests?.has(`${test.id}-${websiteId}`)
-                const Icon = test.icon
-                const runningCount = runningTests ?
-                  Array.from(runningTests).filter(key => key.startsWith(`${test.id}-`)).length : 0
-
-                return (
-                  <div key={test.id} className="col-12">
-                    <div
-                      className={`card card-sm test-card ${isRunning ? 'test-card-running' : ''}`}
-                      onClick={() => !isRunning && handleTestClick(test.id)}
-                      style={{
-                        cursor: isRunning ? 'not-allowed' : 'pointer',
-                        borderLeft: `3px solid ${test.color}`,
-                        transition: 'all 0.2s',
-                        opacity: isRunning ? 0.7 : 1
-                      }}
-                    >
-                      <div className="card-body">
-                        <div className="d-flex align-items-start">
-                          <div
-                            className="avatar avatar-sm me-3"
-                            style={{
-                              background: `${test.color}20`,
-                              color: test.color
-                            }}
-                          >
-                            <Icon size={20} />
-                          </div>
-                          <div className="flex-fill">
-                            <div className="d-flex justify-content-between align-items-start mb-1">
-                              <h4 className="card-title mb-0">{test.name}</h4>
-                              <span className="badge bg-muted text-muted-foreground">{test.duration}</span>
-                            </div>
-                            <p className="text-muted small mb-2">{test.description}</p>
-                            <div className="d-flex justify-content-between align-items-center">
-                              <span className="badge bg-azure-lt">
-                                {test.tool}
-                              </span>
-                              {isRunning && (
-                                <div className="d-flex align-items-center gap-1">
-                                  <IconLoader2 size={16} className="icon-spin text-primary" />
-                                  <span className="text-primary small fw-bold">Running...</span>
-                                  {runningCount > 1 && (
-                                    <span className="badge bg-primary">{runningCount}</span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                  <div className="test-card-icon" style={{ background: test.bgColor, color: test.color }}>
+                    {isRunning ? <Loader2 size={20} className="spin" /> : <Icon size={20} />}
+                  </div>
+                  <div className="test-card-content">
+                    <div className="test-card-name">{test.name}</div>
+                    <div className="test-card-duration">
+                      <Clock size={10} />
+                      {test.duration}
                     </div>
                   </div>
-                )
-              })}
-            </div>
+                  {isRunning && <div className="test-card-progress" />}
+                  {!isRunning && <div className="test-card-play"><Play size={14} /></div>}
+                </button>
+              )
+            })}
           </div>
         </div>
+
+        {/* Hover Info Panel */}
+        {hoveredTest && (
+          <div className="hover-info">
+            {(() => {
+              const test = testTypes.find(t => t.id === hoveredTest)
+              if (!test) return null
+              return (
+                <>
+                  <div className="hover-info-header">
+                    <strong>{test.fullName}</strong>
+                    <span className="tool-badge">{test.tool}</span>
+                  </div>
+                  <p>{test.description}</p>
+                </>
+              )
+            })()}
+          </div>
+        )}
 
         {/* Footer */}
-        <div className="offcanvas-footer border-top p-3">
-          <div className="d-flex gap-2">
-            <button
-              className="btn btn-primary flex-fill"
-              onClick={handleRunAllTests}
-              disabled={totalRunning > 0}
-            >
-              <IconPlayerPlay size={16} className="me-2" />
-              Run All Tests ({testTypes.length})
-            </button>
-            <button className="btn btn-outline-secondary" onClick={onClose}>
-              Close
-            </button>
-          </div>
-          <div className="text-muted small mt-2 text-center">
-            💡 Click any test to run it • Tests run independently
-          </div>
+        <div className="test-drawer-footer">
+          <button
+            className="run-all-btn"
+            onClick={handleRunAllTests}
+            disabled={totalRunning > 0}
+          >
+            {totalRunning > 0 ? (
+              <>
+                <Loader2 size={16} className="spin" />
+                Tests Running...
+              </>
+            ) : (
+              <>
+                <Play size={16} />
+                Run All Tests ({testTypes.length})
+              </>
+            )}
+          </button>
+          <button className="cancel-btn" onClick={onClose}>
+            Close
+          </button>
         </div>
       </div>
-
-      <style jsx>{`
-        .icon-spin {
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        .test-card:hover:not(.test-card-running) {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .test-card-running {
-          background: rgba(var(--tblr-primary-rgb), 0.03);
-        }
-      `}</style>
     </>
   )
 }

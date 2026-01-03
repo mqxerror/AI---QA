@@ -943,6 +943,412 @@ table td {
   font-weight: 500;
 }
 
+/* ========================================
+   ADD WEBSITE DRAWER
+   ======================================== */
+
+/* Backdrop */
+.drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  animation: drawerFadeIn 0.2s ease;
+}
+
+@keyframes drawerFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Drawer Panel */
+.add-website-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 480px;
+  max-width: 100vw;
+  background: white;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  animation: drawerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Drawer Header */
+.add-website-drawer .drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+}
+
+.add-website-drawer .drawer-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.add-website-drawer .drawer-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  flex-shrink: 0;
+}
+
+.add-website-drawer .drawer-title h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.add-website-drawer .drawer-title p {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.add-website-drawer .drawer-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 10px;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.add-website-drawer .drawer-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* Drawer Body */
+.add-website-drawer .drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* Preview Card */
+.add-website-drawer .preview-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #d1fae5;
+  border-radius: 14px;
+  margin-bottom: 24px;
+}
+
+.add-website-drawer .preview-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.add-website-drawer .preview-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.add-website-drawer .preview-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.add-website-drawer .preview-url {
+  font-size: 12px;
+  color: #059669;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.add-website-drawer .preview-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.add-website-drawer .preview-status .status-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Drawer Form */
+.add-website-drawer .drawer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.add-website-drawer .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.add-website-drawer .form-field label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.add-website-drawer .form-field label svg {
+  color: #6b7280;
+}
+
+.add-website-drawer .form-field input {
+  padding: 14px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  color: #374151;
+  background: white;
+  transition: all 0.2s;
+}
+
+.add-website-drawer .form-field input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.add-website-drawer .form-field input::placeholder {
+  color: #9ca3af;
+}
+
+.add-website-drawer .field-hint {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* URL Field */
+.add-website-drawer .url-field {
+  display: flex;
+  align-items: stretch;
+}
+
+.add-website-drawer .protocol-dropdown {
+  padding: 14px 12px;
+  border: 2px solid #e5e7eb;
+  border-right: none;
+  border-radius: 12px 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
+}
+
+.add-website-drawer .protocol-dropdown:focus {
+  outline: none;
+  border-color: #10b981;
+  z-index: 1;
+}
+
+.add-website-drawer .url-field input {
+  flex: 1;
+  border-radius: 0 12px 12px 0;
+  border-left: none;
+}
+
+.add-website-drawer .url-field input:focus {
+  border-left: 2px solid #10b981;
+  margin-left: -2px;
+}
+
+/* Schedule Options */
+.add-website-drawer .schedule-options {
+  display: flex;
+  gap: 10px;
+}
+
+.add-website-drawer .schedule-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-website-drawer .schedule-btn:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.add-website-drawer .schedule-btn.active {
+  border-color: #10b981;
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.add-website-drawer .schedule-btn svg {
+  flex-shrink: 0;
+}
+
+/* Quick Tips */
+.add-website-drawer .drawer-tips {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.add-website-drawer .tip-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.add-website-drawer .drawer-tips ul {
+  margin: 0;
+  padding: 0 0 0 18px;
+}
+
+.add-website-drawer .drawer-tips li {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+/* Drawer Footer */
+.add-website-drawer .drawer-footer {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.add-website-drawer .btn-secondary {
+  padding: 14px 24px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #6b7280;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-website-drawer .btn-secondary:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.add-website-drawer .btn-primary {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.add-website-drawer .btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.add-website-drawer .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-website-drawer .spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
   .websites-page .kpi-grid {
@@ -1003,5 +1409,18 @@ table td {
 
   .websites-page .websites-table {
     min-width: 700px;
+  }
+
+  /* Drawer Responsive */
+  .add-website-drawer {
+    width: 100vw;
+  }
+
+  .add-website-drawer .schedule-options {
+    flex-direction: column;
+  }
+
+  .add-website-drawer .schedule-btn {
+    width: 100%;
   }
 }

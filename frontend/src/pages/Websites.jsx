@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getWebsites, createWebsite, deleteWebsite, runSmokeTest, runPerformanceTest, runPixelAudit, runLoadTest, runAccessibilityTest, runSecurityScan, runSEOAudit, runVisualRegression } from '../services/api'
-import { Play, Trash2, Plus, Globe, Briefcase, Code2, RefreshCw, TrendingUp, CheckCircle, XCircle, Clock, Activity } from 'lucide-react'
+import { Play, Trash2, Plus, Globe, Briefcase, Code2, RefreshCw, TrendingUp, CheckCircle, XCircle, Clock, Activity, X, Link2, Calendar, Zap } from 'lucide-react'
 import {
   TextShimmer,
   FadeText,
@@ -241,6 +241,12 @@ function Websites() {
     setModalOpen(true)
   }
 
+  // Get preview initials
+  const getInitials = (name) => {
+    if (!name) return 'WS'
+    return name.substring(0, 2).toUpperCase()
+  }
+
   if (isLoading) return <div className="loading">Loading websites...</div>
 
   return (
@@ -276,7 +282,7 @@ function Websites() {
             <RefreshCw size={16} />
             Refresh
           </button>
-          <button className="add-btn" onClick={() => setShowAddForm(!showAddForm)}>
+          <button className="add-btn" onClick={() => setShowAddForm(true)}>
             <Plus size={16} />
             Add Website
           </button>
@@ -356,67 +362,143 @@ function Websites() {
         </div>
       )}
 
-      {/* Add Website Form */}
+      {/* Add Website Drawer */}
       {showAddForm && (
-        <ScrollReveal delay={0.1} direction="up">
-          <div className="add-website-form">
-            <div className="form-header">
-              <h3>Add New Website</h3>
-              <button className="close-btn" onClick={() => setShowAddForm(false)}>×</button>
-            </div>
-            <div className="form-body">
-              <div className="form-group">
-                <label>Website Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g., Google"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-              <div className="form-group url-group">
-                <label>URL</label>
-                <div className="url-input-wrapper">
-                  <select
-                    className="protocol-select"
-                    value={formData.protocol}
-                    onChange={(e) => setFormData({ ...formData, protocol: e.target.value })}
-                  >
-                    <option value="https://">https://</option>
-                    <option value="http://">http://</option>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="example.com"
-                    value={formData.url}
-                    onChange={(e) => setFormData({ ...formData, url: e.target.value.replace(/^(https?:\/\/)/i, '') })}
-                  />
+        <>
+          <div className="drawer-backdrop" onClick={() => setShowAddForm(false)} />
+          <div className="add-website-drawer">
+            <div className="drawer-header">
+              <div className="drawer-title">
+                <div className="drawer-icon">
+                  <Plus size={20} />
+                </div>
+                <div>
+                  <h3>Add New Website</h3>
+                  <p>Set up monitoring for a new website</p>
                 </div>
               </div>
-              <div className="form-group">
-                <label>Test Frequency</label>
-                <select
-                  value={formData.test_frequency}
-                  onChange={(e) => setFormData({ ...formData, test_frequency: e.target.value })}
-                >
-                  <option>Manual</option>
-                  <option>Daily</option>
-                  <option>Weekly</option>
-                </select>
+              <button className="drawer-close" onClick={() => setShowAddForm(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="drawer-body">
+              {/* Live Preview Card */}
+              <div className="preview-card">
+                <div className="preview-avatar">
+                  {getInitials(formData.name)}
+                </div>
+                <div className="preview-info">
+                  <div className="preview-name">{formData.name || 'Website Name'}</div>
+                  <div className="preview-url">
+                    {formData.protocol}{formData.url || 'example.com'}
+                  </div>
+                </div>
+                <div className="preview-status">
+                  <span className="status-dot"></span>
+                  Active
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <div className="drawer-form">
+                <div className="form-field">
+                  <label>
+                    <Globe size={14} />
+                    Website Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="My Awesome Website"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                  <span className="field-hint">A friendly name to identify this website</span>
+                </div>
+
+                <div className="form-field">
+                  <label>
+                    <Link2 size={14} />
+                    Website URL
+                  </label>
+                  <div className="url-field">
+                    <select
+                      className="protocol-dropdown"
+                      value={formData.protocol}
+                      onChange={(e) => setFormData({ ...formData, protocol: e.target.value })}
+                    >
+                      <option value="https://">https://</option>
+                      <option value="http://">http://</option>
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="www.example.com"
+                      value={formData.url}
+                      onChange={(e) => setFormData({ ...formData, url: e.target.value.replace(/^(https?:\/\/)/i, '') })}
+                    />
+                  </div>
+                  <span className="field-hint">Enter the full URL without the protocol</span>
+                </div>
+
+                <div className="form-field">
+                  <label>
+                    <Calendar size={14} />
+                    Test Schedule
+                  </label>
+                  <div className="schedule-options">
+                    {['Manual', 'Daily', 'Weekly'].map((freq) => (
+                      <button
+                        key={freq}
+                        type="button"
+                        className={`schedule-btn ${formData.test_frequency === freq ? 'active' : ''}`}
+                        onClick={() => setFormData({ ...formData, test_frequency: freq })}
+                      >
+                        {freq === 'Manual' && <Zap size={14} />}
+                        {freq === 'Daily' && <Clock size={14} />}
+                        {freq === 'Weekly' && <Calendar size={14} />}
+                        {freq}
+                      </button>
+                    ))}
+                  </div>
+                  <span className="field-hint">How often should automated tests run?</span>
+                </div>
+              </div>
+
+              {/* Quick Tips */}
+              <div className="drawer-tips">
+                <div className="tip-title">Quick Tips</div>
+                <ul>
+                  <li>Use HTTPS for secure sites (recommended)</li>
+                  <li>Include www if your site uses it</li>
+                  <li>Daily tests help catch issues early</li>
+                </ul>
               </div>
             </div>
-            <div className="form-footer">
-              <button className="btn-cancel" onClick={() => setShowAddForm(false)}>Cancel</button>
+
+            <div className="drawer-footer">
+              <button className="btn-secondary" onClick={() => setShowAddForm(false)}>
+                Cancel
+              </button>
               <button
-                className="btn-submit"
+                className="btn-primary"
                 onClick={() => createMutation.mutate(formData)}
-                disabled={!formData.name || !formData.url}
+                disabled={!formData.name || !formData.url || createMutation.isLoading}
               >
-                Add Website
+                {createMutation.isLoading ? (
+                  <>
+                    <span className="spinner"></span>
+                    Adding...
+                  </>
+                ) : (
+                  <>
+                    <Plus size={16} />
+                    Add Website
+                  </>
+                )}
               </button>
             </div>
           </div>
-        </ScrollReveal>
+        </>
       )}
 
       {/* Websites Table */}
