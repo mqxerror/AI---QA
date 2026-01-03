@@ -28,7 +28,15 @@ const PORT = process.env.PORT || 3004;
 const TEST_API_URL = process.env.TEST_API_URL || 'http://38.97.60.181:3003';
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      "img-src": ["'self'", "data:", "*"], // Allow images from any origin
+    },
+  },
+}));
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   credentials: true
@@ -798,7 +806,7 @@ app.post('/api/run-test/load/:websiteId', authenticate, async (req, res) => {
     const response = await axios.post(`${TEST_API_URL}/api/test/load`, {
       target_url: website.url,
       virtual_users,
-      duration_seconds
+      duration: `${duration_seconds}s`  // API expects duration as string like '30s'
     }, { timeout: (duration_seconds + 60) * 1000 }); // Add 60s buffer to timeout
 
     ProcessMonitor.updateProgress(processId, 80);
@@ -822,8 +830,9 @@ app.post('/api/run-test/load/:websiteId', authenticate, async (req, res) => {
 
     const testRunId = runResult.lastInsertRowid;
 
-    // Store load test metrics
+    // Store load test metrics - map test API field names to database fields
     if (testData.metrics) {
+      const metrics = testData.metrics;
       db.prepare(`
         INSERT INTO load_test_results (
           test_run_id, virtual_users, duration_seconds,
@@ -836,15 +845,24 @@ app.post('/api/run-test/load/:websiteId', authenticate, async (req, res) => {
         testRunId,
         virtual_users,
         duration_seconds,
-        testData.metrics.requests_total || 0,
-        testData.metrics.requests_failed || 0,
-        testData.metrics.latency_p50 || null,
-        testData.metrics.latency_p90 || null,
-        testData.metrics.latency_p95 || null,
-        testData.metrics.latency_p99 || null,
-        testData.metrics.throughput_rps || null,
-        testData.metrics.error_rate || null
+        metrics.total_requests || metrics.requests_total || 0,
+        metrics.requests_failed || 0,
+        metrics.p50_ms || metrics.latency_p50 || null,
+        metrics.p90_ms || metrics.latency_p90 || null,
+        metrics.p95_ms || metrics.latency_p95 || null,
+        metrics.p99_ms || metrics.latency_p99 || null,
+        metrics.rps || metrics.throughput_rps || null,
+        metrics.error_rate || null
       );
+    } else {
+      // Store a record even if metrics are missing, to track the test run
+      db.prepare(`
+        INSERT INTO load_test_results (
+          test_run_id, virtual_users, duration_seconds,
+          requests_total, requests_failed
+        )
+        VALUES (?, ?, ?, 0, 0)
+      `).run(testRunId, virtual_users, duration_seconds);
     }
 
     // Update website
@@ -1425,6 +1443,9 @@ app.get('/api/stats', (req, res) => {
 
 // Serve static PDF files
 app.use('/reports', express.static('reports'));
+
+// Serve static screenshot files
+app.use('/screenshots', express.static('screenshots'));
 
 // Generate PDF report for a test run
 app.get('/api/test-runs/:id/report', authenticate, async (req, res) => {

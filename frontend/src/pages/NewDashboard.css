@@ -793,3 +793,126 @@
   font-weight: 600;
   text-align: center;
 }
+
+/* ==================================
+   API DOCUMENTATION SECTION
+   ================================== */
+
+.api-docs {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.api-section {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.api-section h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.api-endpoint {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.api-endpoint:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.endpoint-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.endpoint-header code {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  background: #f9fafb;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.http-method {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: white;
+}
+
+.http-method.get {
+  background: #10b981;
+}
+
+.http-method.post {
+  background: #3b82f6;
+}
+
+.http-method.delete {
+  background: #ef4444;
+}
+
+.http-method.ws {
+  background: #8b5cf6;
+}
+
+.endpoint-desc {
+  color: #6b7280;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.endpoint-note {
+  margin-top: 12px;
+  padding: 12px;
+  background: #eff6ff;
+  border-left: 3px solid #3b82f6;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1e40af;
+}
+
+.endpoint-note code {
+  background: #dbeafe;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  color: #1e3a8a;
+}
+
+.code-block {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre;
+  margin-top: 12px;
+}
+
+.code-block code {
+  background: none;
+  color: inherit;
+  padding: 0;
+}

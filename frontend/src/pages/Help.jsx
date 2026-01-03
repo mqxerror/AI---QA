@@ -1,4 +1,4 @@
-import { Bug, Zap, Eye, Users, CheckCircle, CheckCircle2 } from 'lucide-react';
+import { Bug, Zap, Eye, Users, CheckCircle, CheckCircle2, Shield, Search, Image, Code } from 'lucide-react';
 import './NewDashboard.css';
 
 export default function Help() {
@@ -105,6 +105,70 @@ export default function Help() {
         'Prevents accessibility lawsuits'
       ],
       technology: 'axe-core + Playwright (Industry-standard accessibility engine)'
+    },
+    {
+      name: 'Security Test',
+      icon: Shield,
+      color: '#dc2626',
+      description: 'Security vulnerabilities and SSL/TLS compliance check',
+      whatItDoes: [
+        'Scans for common security vulnerabilities (OWASP Top 10)',
+        'Validates SSL/TLS certificate and configuration',
+        'Checks HTTP security headers (CSP, HSTS, X-Frame-Options)',
+        'Detects exposed sensitive data in client-side code',
+        'Tests for clickjacking, XSS, and CSRF vulnerabilities'
+      ],
+      benefits: [
+        'Prevents data breaches and security incidents',
+        'Ensures SSL certificate validity',
+        'Compliance with security standards (PCI DSS, SOC 2)',
+        'Protects user data and privacy',
+        'Early vulnerability detection'
+      ],
+      technology: 'Playwright + OWASP ZAP'
+    },
+    {
+      name: 'SEO Test',
+      icon: Search,
+      color: '#eab308',
+      description: 'Search engine optimization and metadata validation',
+      whatItDoes: [
+        'Validates meta tags (title, description, keywords)',
+        'Checks structured data (JSON-LD, microdata)',
+        'Analyzes heading hierarchy (H1, H2, H3)',
+        'Verifies robots.txt and sitemap.xml',
+        'Tests canonical URLs and hreflang tags',
+        'Checks for duplicate content and broken links'
+      ],
+      benefits: [
+        'Improved search engine rankings',
+        'Better click-through rates (CTR)',
+        'Enhanced social media previews',
+        'Rich snippet eligibility',
+        'Faster Google indexing'
+      ],
+      technology: 'Lighthouse SEO Audit'
+    },
+    {
+      name: 'Visual Regression Test',
+      icon: Image,
+      color: '#ec4899',
+      description: 'Visual comparison and screenshot diff testing',
+      whatItDoes: [
+        'Captures baseline and current screenshots',
+        'Generates pixel-by-pixel difference images',
+        'Calculates visual similarity scores',
+        'Tests across multiple viewports (desktop, tablet, mobile)',
+        'Identifies unintended visual changes'
+      ],
+      benefits: [
+        'Prevents UI breaking changes',
+        'Ensures design consistency across deployments',
+        'Catches CSS regression bugs',
+        'Validates responsive design',
+        'Automated visual QA'
+      ],
+      technology: 'Playwright + Pixelmatch'
     }
   ];
 
@@ -340,6 +404,236 @@ export default function Help() {
             <div className="quick-start-number">4</div>
             <h4>Review Results</h4>
             <p>View test results on the "Test Runs" page with detailed metrics and recommendations.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>API Endpoints & Integration</h2>
+        <p className="section-subtitle">
+          Access test results programmatically via our REST API
+        </p>
+
+        <div className="api-docs">
+          <div className="api-section">
+            <h3>
+              <Code size={20} style={{ display: 'inline', marginRight: '8px', color: '#3b82f6' }} />
+              Base URL
+            </h3>
+            <div className="code-block">
+              <code>http://localhost:3004/api</code>
+            </div>
+          </div>
+
+          <div className="api-section">
+            <h3>Test Execution Endpoints</h3>
+
+            <div className="api-endpoint">
+              <div className="endpoint-header">
+                <span className="http-method post">POST</span>
+                <code>/test-runs</code>
+              </div>
+              <p className="endpoint-desc">Start a new test run</p>
+              <div className="code-block">
+{`{
+  "websiteId": 1,
+  "testType": "smoke",
+  "triggeredBy": "user@example.com"
+}`}
+              </div>
+              <p className="endpoint-note">
+                <strong>Test Types:</strong> <code>smoke</code>, <code>performance</code>, <code>load</code>,
+                <code>accessibility</code>, <code>security</code>, <code>seo</code>, <code>visual</code>, <code>pixel</code>
+              </p>
+            </div>
+
+            <div className="api-endpoint">
+              <div className="endpoint-header">
+                <span className="http-method get">GET</span>
+                <code>/test-runs</code>
+              </div>
+              <p className="endpoint-desc">Get all test runs (with optional filters)</p>
+              <div className="code-block">
+{`// Query parameters
+?website=1&type=smoke&status=pass&limit=10`}
+              </div>
+            </div>
+
+            <div className="api-endpoint">
+              <div className="endpoint-header">
+                <span className="http-method get">GET</span>
+                <code>/test-runs/:id</code>
+              </div>
+              <p className="endpoint-desc">Get detailed results for a specific test run</p>
+              <div className="code-block">
+{`// Response includes:
+{
+  "id": 123,
+  "website_name": "Example Site",
+  "test_type": "smoke",
+  "status": "pass",
+  "duration_seconds": 5.2,
+  "passed_count": 4,
+  "total_count": 4,
+  "results": [...],  // Detailed test results
+  "lighthouse_score": {...},  // For performance tests
+  "violations": [...],  // For accessibility tests
+  "comparisons": [...],  // For visual tests
+  "created_at": "2025-01-03T03:21:00Z"
+}`}
+              </div>
+            </div>
+          </div>
+
+          <div className="api-section">
+            <h3>Website Management</h3>
+
+            <div className="api-endpoint">
+              <div className="endpoint-header">
+                <span className="http-method get">GET</span>
+                <code>/websites</code>
+              </div>
+              <p className="endpoint-desc">List all configured websites</p>
+            </div>
+
+            <div className="api-endpoint">
+              <div className="endpoint-header">
+                <span className="http-method post">POST</span>
+                <code>/websites</code>
+              </div>
+              <p className="endpoint-desc">Add a new website</p>
+              <div className="code-block">
+{`{
+  "name": "My Website",
+  "url": "https://example.com"
+}`}
+              </div>
+            </div>
+
+            <div className="api-endpoint">
+              <div className="endpoint-header">
+                <span className="http-method delete">DELETE</span>
+                <code>/websites/:id</code>
+              </div>
+              <p className="endpoint-desc">Remove a website</p>
+            </div>
+          </div>
+
+          <div className="api-section">
+            <h3>Reports & Artifacts</h3>
+
+            <div className="api-endpoint">
+              <div className="endpoint-header">
+                <span className="http-method get">GET</span>
+                <code>/reports/:filename</code>
+              </div>
+              <p className="endpoint-desc">Access generated reports (HTML, PDF)</p>
+              <p className="endpoint-note">
+                Reports are stored in MinIO and accessible via direct URLs returned in test results
+              </p>
+            </div>
+
+            <div className="api-endpoint">
+              <div className="endpoint-header">
+                <span className="http-method get">GET</span>
+                <code>/screenshots/:filename</code>
+              </div>
+              <p className="endpoint-desc">View test screenshots</p>
+              <p className="endpoint-note">
+                Screenshots are captured during test execution and stored in MinIO
+              </p>
+            </div>
+          </div>
+
+          <div className="api-section">
+            <h3>Real-Time Updates (WebSocket)</h3>
+
+            <div className="api-endpoint">
+              <div className="endpoint-header">
+                <span className="http-method ws">WS</span>
+                <code>ws://localhost:3004</code>
+              </div>
+              <p className="endpoint-desc">Subscribe to real-time test run updates</p>
+              <div className="code-block">
+{`// Connect to WebSocket
+const socket = io('http://localhost:3004');
+
+// Listen for test completion
+socket.on('test-completed', (data) => {
+  console.log('Test finished:', data.testRunId);
+});
+
+// Listen for test failures
+socket.on('test-failed', (data) => {
+  console.log('Test failed:', data.error);
+});`}
+              </div>
+            </div>
+          </div>
+
+          <div className="api-section">
+            <h3>Example: Fetching Test Results</h3>
+
+            <div className="code-block">
+{`// JavaScript/Node.js example
+const axios = require('axios');
+
+async function getTestResults(testRunId) {
+  try {
+    const response = await axios.get(
+      \`http://localhost:3004/api/test-runs/\${testRunId}\`
+    );
+
+    const testData = response.data;
+    console.log(\`Status: \${testData.status}\`);
+    console.log(\`Duration: \${testData.duration_seconds}s\`);
+    console.log(\`Tests Passed: \${testData.passed_count}/\${testData.total_count}\`);
+
+    // For performance tests
+    if (testData.lighthouse_score) {
+      console.log(\`Performance Score: \${testData.lighthouse_score.performance}\`);
+    }
+
+    // For visual regression tests
+    if (testData.comparisons) {
+      console.log(\`Visual Comparisons: \${testData.comparisons.length}\`);
+      console.log(\`Baseline: \${testData.baseline_url}\`);
+      console.log(\`Current: \${testData.current_url}\`);
+      console.log(\`Diff: \${testData.diff_url}\`);
+    }
+
+    return testData;
+  } catch (error) {
+    console.error('Error fetching test results:', error);
+  }
+}
+
+// Usage
+getTestResults(123);`}
+            </div>
+          </div>
+
+          <div className="api-section">
+            <h3>Authentication</h3>
+            <div className="code-block">
+{`// Include credentials in requests
+fetch('http://localhost:3004/api/test-runs', {
+  credentials: 'include',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Login endpoint
+POST /api/auth/login
+{
+  "username": "admin",
+  "password": "your-password"
+}
+
+// Verify authentication
+GET /api/auth/verify`}
+            </div>
           </div>
         </div>
       </section>

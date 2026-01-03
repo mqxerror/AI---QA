@@ -14,7 +14,7 @@ import {
 } from '@tabler/icons-react'
 import NewDashboard from './pages/NewDashboard'
 import Websites from './pages/Websites'
-import TestRuns from './pages/TestRuns'
+import TestRuns from './pages/TestRunsEnhanced'
 import SystemStatus from './pages/SystemStatus'
 import ActivityLog from './pages/ActivityLog'
 import ProcessMonitor from './pages/ProcessMonitor'
