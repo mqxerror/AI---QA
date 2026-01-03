@@ -27,7 +27,7 @@ RUN echo 'server { \
     } \
     \
     location /api { \
-        proxy_pass https://qa-api.pixelcraftedmedia.com; \
+        proxy_pass https://qa-api.portugalgoldenvisas.co; \
         proxy_http_version 1.1; \
         proxy_set_header Upgrade $http_upgrade; \
         proxy_set_header Connection "upgrade"; \
@@ -41,7 +41,7 @@ RUN echo 'server { \
     } \
     \
     location /reports { \
-        proxy_pass https://qa-api.pixelcraftedmedia.com; \
+        proxy_pass https://qa-api.portugalgoldenvisas.co; \
         proxy_http_version 1.1; \
         proxy_set_header Host $host; \
         proxy_set_header X-Real-IP $remote_addr; \
@@ -50,7 +50,7 @@ RUN echo 'server { \
     } \
     \
     location /socket.io { \
-        proxy_pass https://qa-api.pixelcraftedmedia.com; \
+        proxy_pass https://qa-api.portugalgoldenvisas.co; \
         proxy_http_version 1.1; \
         proxy_set_header Upgrade $http_upgrade; \
         proxy_set_header Connection "upgrade"; \
