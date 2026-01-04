@@ -10,7 +10,7 @@ import {
   IconHelp,
   IconLogout
 } from '@tabler/icons-react'
-import NewDashboard from './pages/NewDashboard'
+import Dashboard from './pages/Dashboard'
 import Websites from './pages/Websites'
 import TestRuns from './pages/TestRunsEnhanced'
 import SystemStatus from './pages/SystemStatus'
@@ -144,7 +144,7 @@ function Layout() {
         <div className="page-body">
           <div className="container-xl">
             <Routes>
-              <Route path="/" element={<PageTransition><NewDashboard /></PageTransition>} />
+              <Route path="/" element={<PageTransition><Dashboard /></PageTransition>} />
               <Route path="/websites" element={<PageTransition><Websites /></PageTransition>} />
               <Route path="/test-runs" element={<PageTransition><TestRuns /></PageTransition>} />
               <Route path="/status" element={<PageTransition><SystemStatus /></PageTransition>} />

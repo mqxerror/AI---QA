@@ -1,3 +1,12 @@
+/**
+ * @deprecated Use TestRunSidePanel instead.
+ * This modal-based component is kept for backward compatibility with TestRunsLayout.jsx
+ * All new implementations should use TestRunSidePanel with the Sheet pattern.
+ *
+ * Migration: Replace TestRunModal with TestRunSidePanel
+ * - Both components share identical API props: isOpen, onClose, testRunId, initialData
+ * - TestRunSidePanel adds: onTestStarted callback for retest functionality
+ */
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -2165,7 +2174,6 @@ export default function TestRunModal({ isOpen, onClose, testRunId, initialData }
                           similarity_score: runDetails.visual_results.overall_score / 100
                         }}
                         comparisons={runDetails.visual_results.comparisons || []}
-                        baseUrl="http://localhost:3004/screenshots"
                       />
                     </div>
                   )}

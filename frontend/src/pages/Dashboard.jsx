@@ -1,367 +1,353 @@
-import { useQuery } from '@tanstack/react-query'
-import { getStats, getTestRuns } from '../services/api'
-import { Activity, CheckCircle, XCircle, Globe, TrendingUp, BarChart3, PieChart, Clock } from 'lucide-react'
+import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getStats, getTestRuns, getWebsites } from '../services/api';
 import {
-  LineChart, Line, BarChart, Bar, PieChart as RechartsPie, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart
-} from 'recharts'
-import { useMemo } from 'react'
+  Activity, Globe, Plus, Play, FileText, TrendingUp, TrendingDown,
+  Shield, Clock, CheckCircle, XCircle, Briefcase, Code2, RefreshCw,
+  BarChart3, Zap
+} from 'lucide-react';
+import {
+  TextShimmer,
+  FadeText,
+  ScrollReveal
+} from '../components/ui';
+import './Dashboard.css';
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316']
+export default function Dashboard() {
+  const [viewMode, setViewMode] = useState('executive');
 
-function Dashboard() {
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ['stats'],
     queryFn: () => getStats().then(res => res.data),
     refetchInterval: 10000
-  })
+  });
 
-  const { data: recentRuns, isLoading: runsLoading } = useQuery({
-    queryKey: ['recent-runs'],
+  const { data: recentRuns = [], refetch: refetchRuns } = useQuery({
+    queryKey: ['dashboard-recent-runs'],
     queryFn: () => getTestRuns({ limit: 100 }).then(res => res.data),
     refetchInterval: 10000
-  })
+  });
 
-  // Calculate pass rate
-  const passRate = stats?.total_test_runs > 0
-    ? Math.round((stats.recent_passes / (stats.recent_passes + stats.recent_fails)) * 100)
-    : 0
+  const { data: websites = [] } = useQuery({
+    queryKey: ['websites'],
+    queryFn: () => getWebsites().then(res => res.data),
+    refetchInterval: 30000
+  });
 
-  // Process data for charts
-  const chartData = useMemo(() => {
-    if (!recentRuns || recentRuns.length === 0) return null
+  // Calculate comprehensive stats
+  const dashboardStats = useMemo(() => {
+    const total = recentRuns.length;
+    const passed = recentRuns.filter(r => r.status === 'Pass').length;
+    const failed = recentRuns.filter(r => r.status === 'Fail').length;
 
-    // Test trends over time (last 7 days)
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date()
-      date.setDate(date.getDate() - (6 - i))
-      return date.toISOString().split('T')[0]
-    })
+    // Calculate trends (last 24h vs previous 24h)
+    const now = new Date();
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(now - 48 * 60 * 60 * 1000);
 
-    const trendData = last7Days.map(date => {
-      const dayRuns = recentRuns.filter(run => run.created_at.startsWith(date))
-      return {
-        date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        passed: dayRuns.filter(r => r.status === 'Pass').length,
-        failed: dayRuns.filter(r => r.status === 'Fail').length,
-        total: dayRuns.length
-      }
-    })
+    const last24h = recentRuns.filter(r => new Date(r.created_at) > oneDayAgo);
+    const prev24h = recentRuns.filter(r => new Date(r.created_at) > twoDaysAgo && new Date(r.created_at) <= oneDayAgo);
 
-    // Test type distribution
-    const testTypes = {}
-    recentRuns.forEach(run => {
-      testTypes[run.test_type] = (testTypes[run.test_type] || 0) + 1
-    })
+    const last24hPassRate = last24h.length > 0
+      ? (last24h.filter(r => r.status === 'Pass').length / last24h.length) * 100
+      : 0;
+    const prev24hPassRate = prev24h.length > 0
+      ? (prev24h.filter(r => r.status === 'Pass').length / prev24h.length) * 100
+      : 0;
 
-    const typeDistribution = Object.entries(testTypes).map(([name, value]) => ({
-      name,
-      value
-    }))
+    const trend = last24hPassRate - prev24hPassRate;
 
-    // Pass/Fail by test type
-    const testTypeStats = {}
-    recentRuns.forEach(run => {
-      if (!testTypeStats[run.test_type]) {
-        testTypeStats[run.test_type] = { passed: 0, failed: 0 }
-      }
-      if (run.status === 'Pass') {
-        testTypeStats[run.test_type].passed++
-      } else {
-        testTypeStats[run.test_type].failed++
-      }
-    })
+    // Test type breakdown
+    const byType = {};
+    recentRuns.forEach(r => {
+      const type = r.test_type || 'Unknown';
+      if (!byType[type]) byType[type] = { total: 0, passed: 0, failed: 0 };
+      byType[type].total++;
+      if (r.status === 'Pass') byType[type].passed++;
+      if (r.status === 'Fail') byType[type].failed++;
+    });
 
-    const passFailByType = Object.entries(testTypeStats).map(([name, stats]) => ({
-      name: name.length > 15 ? name.substring(0, 15) + '...' : name,
-      passed: stats.passed,
-      failed: stats.failed,
-      passRate: Math.round((stats.passed / (stats.passed + stats.failed)) * 100)
-    }))
-
-    // Performance trends (last 20 performance tests)
-    const perfTests = recentRuns
-      .filter(run => run.test_type === 'Performance')
-      .slice(0, 20)
-      .reverse()
+    // Calculate average duration
+    const runsWithDuration = recentRuns.filter(r => r.duration_ms > 0);
+    const avgDuration = runsWithDuration.length > 0
+      ? runsWithDuration.reduce((sum, r) => sum + r.duration_ms, 0) / runsWithDuration.length
+      : 0;
 
     return {
-      trendData,
-      typeDistribution,
-      passFailByType,
-      perfTests
-    }
-  }, [recentRuns])
+      total,
+      passed,
+      failed,
+      trend,
+      last24h: last24h.length,
+      byType,
+      avgDuration,
+      passRate: total > 0 ? Math.round((passed / total) * 100) : 0
+    };
+  }, [recentRuns]);
 
-  if (statsLoading || runsLoading) return <div className="loading">Loading...</div>
+  const formatDuration = (ms) => {
+    if (ms < 1000) return `${Math.round(ms)}ms`;
+    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+    return `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`;
+  };
+
+  const handleRefresh = () => {
+    refetchStats();
+    refetchRuns();
+  };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '700' }}>Dashboard</h2>
-        <div style={{ fontSize: '14px', color: '#6b7280' }}>
-          <Clock size={14} style={{ display: 'inline', marginRight: '5px' }} />
-          Last updated: {new Date().toLocaleTimeString()}
+    <div className="dashboard-page">
+      {/* Header */}
+      <div className="page-header">
+        <FadeText direction="down">
+          <div>
+            <TextShimmer className="title-shimmer">
+              <h1>Dashboard</h1>
+            </TextShimmer>
+            <p>QA Testing overview and performance monitoring</p>
+          </div>
+        </FadeText>
+        <div className="header-actions">
+          {/* View Mode Toggle */}
+          <div className="view-mode-toggle">
+            <button
+              onClick={() => setViewMode('executive')}
+              className={`view-mode-btn ${viewMode === 'executive' ? 'active' : ''}`}
+            >
+              <Briefcase size={16} />
+              Executive
+            </button>
+            <button
+              onClick={() => setViewMode('technical')}
+              className={`view-mode-btn ${viewMode === 'technical' ? 'active' : ''}`}
+            >
+              <Code2 size={16} />
+              Technical
+            </button>
+          </div>
+          <button onClick={handleRefresh} className="refresh-btn">
+            <RefreshCw size={16} />
+            Refresh
+          </button>
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="stats-grid" style={{ marginBottom: '25px' }}>
-        <div className="stat-card">
-          <div className="stat-label">
-            <Globe size={16} style={{ display: 'inline', marginRight: '5px' }} />
-            Total Websites
-          </div>
-          <div className="stat-value">{stats?.total_websites || 0}</div>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '5px' }}>
-            {stats?.active_websites || 0} active
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-label">
-            <Activity size={16} style={{ display: 'inline', marginRight: '5px' }} />
-            Total Tests
-          </div>
-          <div className="stat-value">{stats?.total_test_runs || 0}</div>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '5px' }}>
-            All time
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-label">
-            <CheckCircle size={16} style={{ display: 'inline', marginRight: '5px' }} />
-            Passed (7d)
-          </div>
-          <div className="stat-value" style={{ color: '#10b981' }}>
-            {stats?.recent_passes || 0}
-          </div>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '5px' }}>
-            Last 7 days
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-label">
-            <XCircle size={16} style={{ display: 'inline', marginRight: '5px' }} />
-            Failed (7d)
-          </div>
-          <div className="stat-value" style={{ color: '#ef4444' }}>
-            {stats?.recent_fails || 0}
-          </div>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '5px' }}>
-            Last 7 days
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-label">
-            <TrendingUp size={16} style={{ display: 'inline', marginRight: '5px' }} />
-            Pass Rate
-          </div>
-          <div className="stat-value" style={{
-            color: passRate >= 90 ? '#10b981' : passRate >= 70 ? '#f59e0b' : '#ef4444'
-          }}>
-            {passRate}%
-          </div>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '5px' }}>
-            Last 7 days
-          </div>
-        </div>
-      </div>
-
-      {chartData && (
-        <>
-          {/* Test Trends Chart */}
-          <div className="card" style={{ marginBottom: '25px' }}>
-            <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BarChart3 size={18} />
-              Test Activity Trends (Last 7 Days)
-            </div>
-            <div style={{ padding: '20px', height: '300px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData.trendData}>
-                  <defs>
-                    <linearGradient id="colorPassed" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorFailed" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="date" stroke="#6b7280" style={{ fontSize: '12px' }} />
-                  <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
-                  <Tooltip
-                    contentStyle={{
-                      background: '#fff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '6px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                    }}
-                  />
-                  <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="passed"
-                    stroke="#10b981"
-                    fillOpacity={1}
-                    fill="url(#colorPassed)"
-                    name="Passed"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="failed"
-                    stroke="#ef4444"
-                    fillOpacity={1}
-                    fill="url(#colorFailed)"
-                    name="Failed"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Two column charts */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '20px', marginBottom: '25px' }}>
-            {/* Test Type Distribution */}
-            <div className="card">
-              <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <PieChart size={18} />
-                Test Distribution by Type
+      {/* Executive View - High-level KPIs */}
+      {viewMode === 'executive' && (
+        <div className="executive-view">
+          <ScrollReveal delay={0.1} direction="up">
+            <div className="kpi-grid">
+              <div className="kpi-card primary">
+                <div className="kpi-icon"><Globe size={24} /></div>
+                <div className="kpi-content">
+                  <div className="kpi-value">{stats?.total_websites || websites.length || 0}</div>
+                  <div className="kpi-label">Total Websites</div>
+                  <div className="kpi-meta">{stats?.active_websites || websites.filter(w => w.status === 'Active').length || 0} active</div>
+                </div>
               </div>
-              <div style={{ padding: '20px', height: '320px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPie>
-                    <Pie
-                      data={chartData.typeDistribution}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {chartData.typeDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </RechartsPie>
-                </ResponsiveContainer>
+              <div className="kpi-card success">
+                <div className="kpi-icon success"><TrendingUp size={24} /></div>
+                <div className="kpi-content">
+                  <div className="kpi-value">{dashboardStats.passRate}%</div>
+                  <div className="kpi-label">Pass Rate</div>
+                  <div className="kpi-trend">
+                    {dashboardStats.trend > 0 ? (
+                      <span className="trend-up"><TrendingUp size={14} /> +{dashboardStats.trend.toFixed(1)}%</span>
+                    ) : dashboardStats.trend < 0 ? (
+                      <span className="trend-down"><TrendingDown size={14} /> {dashboardStats.trend.toFixed(1)}%</span>
+                    ) : (
+                      <span className="trend-neutral">No change</span>
+                    )}
+                  </div>
+                </div>
+                <div className="kpi-progress">
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${dashboardStats.passRate}%` }}></div>
+                  </div>
+                </div>
+              </div>
+              <div className="kpi-card danger">
+                <div className="kpi-icon danger"><XCircle size={24} /></div>
+                <div className="kpi-content">
+                  <div className="kpi-value">{dashboardStats.failed}</div>
+                  <div className="kpi-label">Failed Tests</div>
+                  <div className="kpi-meta">{dashboardStats.total > 0 ? ((dashboardStats.failed / dashboardStats.total) * 100).toFixed(1) : 0}% failure rate</div>
+                </div>
+              </div>
+              <div className="kpi-card info">
+                <div className="kpi-icon info"><Clock size={24} /></div>
+                <div className="kpi-content">
+                  <div className="kpi-value">{formatDuration(dashboardStats.avgDuration)}</div>
+                  <div className="kpi-label">Avg Duration</div>
+                  <div className="kpi-meta">Per test run</div>
+                </div>
               </div>
             </div>
+          </ScrollReveal>
 
-            {/* Pass/Fail by Test Type */}
-            <div className="card">
-              <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <BarChart3 size={18} />
-                Pass/Fail Rate by Test Type
-              </div>
-              <div style={{ padding: '20px', height: '320px' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData.passFailByType}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: '11px' }} />
-                    <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
-                    <Tooltip
-                      contentStyle={{
-                        background: '#fff',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '6px'
-                      }}
-                    />
-                    <Legend />
-                    <Bar dataKey="passed" fill="#10b981" name="Passed" />
-                    <Bar dataKey="failed" fill="#ef4444" name="Failed" />
-                  </BarChart>
-                </ResponsiveContainer>
+          {/* Test Type Breakdown */}
+          <ScrollReveal delay={0.2} direction="up">
+            <div className="type-breakdown">
+              <h3>Test Coverage by Type</h3>
+              <div className="type-cards">
+                {Object.entries(dashboardStats.byType).map(([type, data]) => (
+                  <Link key={type} to="/test-runs" className="type-card">
+                    <div className="type-name">{type}</div>
+                    <div className="type-stats">
+                      <span className="type-total">{data.total} runs</span>
+                      <span className="type-pass-rate">
+                        {data.total > 0 ? ((data.passed / data.total) * 100).toFixed(0) : 0}% pass
+                      </span>
+                    </div>
+                    <div className="type-bar">
+                      <div
+                        className="type-bar-fill"
+                        style={{ width: `${data.total > 0 ? (data.passed / data.total) * 100 : 0}%` }}
+                      ></div>
+                    </div>
+                  </Link>
+                ))}
               </div>
             </div>
-          </div>
-        </>
+          </ScrollReveal>
+        </div>
       )}
 
-      {/* Recent Test Runs */}
-      <div className="card">
-        <div className="card-header">Recent Test Runs (Last 10)</div>
-        {!recentRuns || recentRuns.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">📊</div>
-            <p>No test runs yet. Start testing from the Websites page.</p>
-          </div>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Website</th>
-                <th>Test Type</th>
-                <th>Status</th>
-                <th>Results</th>
-                <th>Duration</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentRuns.slice(0, 10).map(run => (
-                <tr key={run.id}>
-                  <td>
-                    <strong>{run.website_name}</strong>
-                    <br />
-                    <small style={{ color: '#6b7280' }}>{run.website_url}</small>
-                  </td>
-                  <td>
-                    <span className="badge badge-info" style={{ fontSize: '11px' }}>
-                      {run.test_type}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge badge-${run.status === 'Pass' ? 'success' : 'danger'}`}>
-                      {run.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <span style={{ color: '#10b981', fontWeight: '600' }}>{run.passed}</span>
-                      <span style={{ color: '#6b7280' }}>/</span>
-                      <span style={{ color: '#6b7280' }}>{run.total_tests}</span>
-                      {run.failed > 0 && (
-                        <span style={{ color: '#ef4444', fontSize: '12px' }}>
-                          ({run.failed} ✗)
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <span style={{
-                      color: run.duration_ms > 30000 ? '#f59e0b' : '#6b7280',
-                      fontSize: '13px'
-                    }}>
-                      {run.duration_ms ? `${(run.duration_ms / 1000).toFixed(1)}s` : '-'}
-                    </span>
-                  </td>
-                  <td>
-                    <small style={{ color: '#6b7280' }}>
-                      {new Date(run.created_at).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </small>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
-  )
-}
+      {/* Technical View - Detailed Stats */}
+      {viewMode === 'technical' && (
+        <div className="technical-view">
+          <ScrollReveal delay={0.1} direction="up">
+            <div className="stats-row">
+              <div className="stat-card">
+                <div className="stat-value">{stats?.total_websites || 0}</div>
+                <div className="stat-label">Websites</div>
+              </div>
+              <div className="stat-card stat-success">
+                <div className="stat-value">{dashboardStats.passed}</div>
+                <div className="stat-label">Passed</div>
+                <div className="stat-progress"><div className="progress-bar" style={{ width: `${dashboardStats.passRate}%` }}></div></div>
+                <div className="stat-meta">{dashboardStats.passRate}% pass rate</div>
+              </div>
+              <div className="stat-card stat-failure">
+                <div className="stat-value">{dashboardStats.failed}</div>
+                <div className="stat-label">Failed</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value">{dashboardStats.total}</div>
+                <div className="stat-label">Total Runs</div>
+                <div className="stat-meta">{dashboardStats.last24h} in last 24h</div>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      )}
 
-export default Dashboard
+      {/* Quick Actions */}
+      <ScrollReveal delay={0.3} direction="up">
+        <div className="quick-actions-section">
+          <h3>Quick Actions</h3>
+          <div className="quick-actions-grid">
+            <Link to="/websites" className="quick-action-card">
+              <div className="quick-action-icon" style={{ background: '#ecfdf5', color: '#10b981' }}>
+                <Plus size={28} />
+              </div>
+              <div className="quick-action-content">
+                <h4>Add Website</h4>
+                <p>Register a new website for testing</p>
+              </div>
+            </Link>
+            <Link to="/websites" className="quick-action-card">
+              <div className="quick-action-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}>
+                <Play size={28} />
+              </div>
+              <div className="quick-action-content">
+                <h4>Run Tests</h4>
+                <p>Execute tests on your websites</p>
+              </div>
+            </Link>
+            <Link to="/test-runs" className="quick-action-card">
+              <div className="quick-action-icon" style={{ background: '#fef3c7', color: '#f59e0b' }}>
+                <BarChart3 size={28} />
+              </div>
+              <div className="quick-action-content">
+                <h4>View Results</h4>
+                <p>Browse test history and analytics</p>
+              </div>
+            </Link>
+            <Link to="/status" className="quick-action-card">
+              <div className="quick-action-icon" style={{ background: '#f3e8ff', color: '#8b5cf6' }}>
+                <Zap size={28} />
+              </div>
+              <div className="quick-action-content">
+                <h4>System Status</h4>
+                <p>Check service health</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </ScrollReveal>
+
+      {/* Recent Test Runs */}
+      <ScrollReveal delay={0.4} direction="up">
+        <div className="recent-runs-section">
+          <div className="section-header">
+            <h3>Recent Test Runs</h3>
+            <Link to="/test-runs" className="view-all-link">View All →</Link>
+          </div>
+          {recentRuns.length === 0 ? (
+            <div className="empty-state">
+              <Activity size={48} />
+              <p>No test runs yet</p>
+              <p className="text-muted">Run your first test from the Websites page</p>
+            </div>
+          ) : (
+            <div className="runs-table-container">
+              <table className="runs-table compact">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Website</th>
+                    <th>Test Type</th>
+                    <th>Results</th>
+                    <th>Duration</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentRuns.slice(0, 10).map(run => (
+                    <tr key={run.id}>
+                      <td className="status-cell">
+                        <span className={`status-icon ${run.status === 'Pass' ? 'status-success' : 'status-error'}`}>
+                          {run.status === 'Pass' ? '✓' : '✗'}
+                        </span>
+                      </td>
+                      <td><span className="website-name">{run.website_name}</span></td>
+                      <td><span className="test-type-badge">{run.test_type}</span></td>
+                      <td>
+                        <span className="results-text">
+                          <span className="passed-count">{run.passed}</span>
+                          <span className="separator">/</span>
+                          <span className="total-count">{run.total_tests}</span>
+                        </span>
+                      </td>
+                      <td className="duration-cell">
+                        {run.duration_ms ? `${(run.duration_ms / 1000).toFixed(1)}s` : '—'}
+                      </td>
+                      <td className="time-cell">
+                        {new Date(run.created_at).toLocaleString('en-US', {
+                          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </ScrollReveal>
+    </div>
+  );
+}

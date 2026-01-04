@@ -16,7 +16,20 @@ class WebSocketClient {
       return;
     }
 
-    const url = import.meta.env.VITE_API_URL || 'http://localhost:3004';
+    // Dynamic URL detection - use same origin in production, localhost in dev
+    const getSocketUrl = () => {
+      if (typeof window !== 'undefined') {
+        const { hostname } = window.location;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return 'http://localhost:3004';
+        }
+        // In production, connect via same origin (nginx proxies /socket.io)
+        return window.location.origin;
+      }
+      return 'http://localhost:3004';
+    };
+
+    const url = import.meta.env.VITE_API_URL || getSocketUrl();
 
     this.socket = io(url, {
       auth: { token },

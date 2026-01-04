@@ -619,31 +619,59 @@
   border-radius: 50%;
   font-size: 14px;
   font-weight: 700;
+  transition: all 0.2s ease;
 }
 
 .status-icon.status-success {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
 }
 
 .status-icon.status-error {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
 }
 
 .status-icon.status-running {
-  background: #dbeafe;
-  color: #1e40af;
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  animation: pulse-running 2s ease-in-out infinite;
 }
 
 .status-icon.status-pending {
-  background: #fef3c7;
-  color: #92400e;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
 }
 
 .status-icon.status-default {
   background: #f3f4f6;
   color: #6b7280;
+}
+
+/* Pulse animation for running tests */
+@keyframes pulse-running {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* Row glow effects on hover */
+.run-row:hover .status-icon.status-success {
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+}
+
+.run-row:hover .status-icon.status-error {
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
 }
 
 /* Test Type */

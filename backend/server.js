@@ -203,9 +203,13 @@ app.get('/api/test-runs', (req, res) => {
     const { website_id, test_type, limit = 50 } = req.query;
 
     let query = `
-      SELECT tr.*, w.name as website_name, w.url as website_url
+      SELECT tr.*, w.name as website_name, w.url as website_url,
+             ltr.virtual_users, ltr.duration_seconds as load_duration_seconds,
+             ltr.requests_total, ltr.requests_failed, ltr.throughput_rps, ltr.error_rate,
+             ltr.latency_p50, ltr.latency_p90, ltr.latency_p95, ltr.latency_p99
       FROM test_runs tr
       JOIN websites w ON tr.website_id = w.id
+      LEFT JOIN load_test_results ltr ON tr.id = ltr.test_run_id
       WHERE 1=1
     `;
     const params = [];

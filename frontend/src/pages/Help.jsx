@@ -1,5 +1,5 @@
 import { Bug, Zap, Eye, Users, CheckCircle, CheckCircle2, Shield, Search, Image, Code } from 'lucide-react';
-import './NewDashboard.css';
+import './Dashboard.css';
 
 export default function Help() {
   const testTypes = [

@@ -669,19 +669,28 @@ export default function TestRunsEnhanced() {
                     <td><span className="website-name">{run.website_name || '—'}</span></td>
                     <td>
                       <span className="results-text">
-                        {run.total_tests > 0 ? (
+                        {run.test_type?.toLowerCase() === 'load test' && run.requests_total ? (
+                          <>
+                            <span className="passed-count">{run.requests_total}</span>
+                            <span className="separator"> req</span>
+                          </>
+                        ) : run.total_tests > 0 ? (
                           <>
                             <span className="passed-count">{run.passed}</span>
                             <span className="separator">/</span>
                             <span className="failed-count">{run.failed}</span>
                             <span className="separator">/</span>
-                            <span className="total-count">{run.total_tests}</span>
+                            <span className="total_count">{run.total_tests}</span>
                           </>
                         ) : '—'}
                       </span>
                     </td>
                     <td className="time-cell">{formatDate(run.created_at)}</td>
-                    <td className="duration-cell">{run.duration_ms ? `${(run.duration_ms / 1000).toFixed(1)}s` : '—'}</td>
+                    <td className="duration-cell">
+                      {run.duration_ms ? `${(run.duration_ms / 1000).toFixed(1)}s`
+                        : run.load_duration_seconds ? `${run.load_duration_seconds}s`
+                        : '—'}
+                    </td>
                     <td className="actions-cell">
                       <div className="action-buttons">
                         {run.failed > 0 && (
@@ -691,12 +700,6 @@ export default function TestRunsEnhanced() {
                         )}
                         <button className="action-btn" onClick={() => handleViewRun(run)} title="View Details">
                           <Eye size={14} />
-                        </button>
-                        <button className="action-btn" title="Rerun">
-                          <RotateCw size={14} />
-                        </button>
-                        <button className="action-btn" title="Compare">
-                          <GitCompare size={14} />
                         </button>
                       </div>
                     </td>

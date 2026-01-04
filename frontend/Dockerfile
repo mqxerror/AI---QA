@@ -15,7 +15,7 @@ RUN apk add --no-cache wget
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Nginx config to proxy API requests, WebSocket, and reports
+# Nginx config to proxy API requests, WebSocket, screenshots, and reports
 RUN echo 'server { \
     listen 80; \
     client_max_body_size 20M; \
@@ -38,6 +38,15 @@ RUN echo 'server { \
         proxy_cache_bypass $http_upgrade; \
         proxy_read_timeout 300s; \
         proxy_connect_timeout 75s; \
+    } \
+    \
+    location /screenshots { \
+        proxy_pass http://qa-dashboard-backend:3004; \
+        proxy_http_version 1.1; \
+        proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
+        proxy_set_header X-Forwarded-Proto $scheme; \
     } \
     \
     location /reports { \

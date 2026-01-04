@@ -10,7 +10,11 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sheet } from './ui/Sheet';
-import { getTestRun, generateReport } from '../services/api';
+import {
+  getTestRun, generateReport, runSmokeTest, runPerformanceTest,
+  runPixelAudit, runLoadTest, runAccessibilityTest, runSecurityScan,
+  runSEOAudit, runVisualRegression
+} from '../services/api';
 import VisualRegressionGallery from './visualizations/VisualRegressionGallery';
 
 // Circular Progress component
@@ -137,7 +141,7 @@ function analyzeTestFailure(runDetails) {
 }
 
 // Panel Header
-function PanelHeader({ runDetails, onClose, onRefresh, isLoading }) {
+function PanelHeader({ runDetails, onClose, onRefresh, onRetest, isLoading, isRetesting }) {
   const statusColor = runDetails?.status?.toLowerCase() === 'pass' ? '#10b981' : '#ef4444';
 
   return (
@@ -173,16 +177,34 @@ function PanelHeader({ runDetails, onClose, onRefresh, isLoading }) {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Retest Button */}
           <button
-            onClick={onRefresh}
-            disabled={isLoading}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Retest clicked, testType:', runDetails?.test_type);
+              onRetest();
+            }}
+            disabled={isRetesting || isLoading}
+            title="Run this test again"
+            className="retest-btn"
             style={{
-              padding: '8px', border: 'none', background: 'transparent',
-              cursor: 'pointer', borderRadius: '8px', display: 'flex',
-              alignItems: 'center', justifyContent: 'center'
+              padding: '6px 12px',
+              border: 'none',
+              background: isRetesting ? '#d1fae5' : '#ecfdf5',
+              color: '#059669',
+              cursor: isRetesting ? 'wait' : 'pointer',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '13px',
+              fontWeight: 600,
+              transition: 'all 0.2s'
             }}
           >
-            <RefreshCw size={18} color="#6b7280" style={{ animation: isLoading ? 'spin 1s linear infinite' : 'none' }} />
+            <RefreshCw size={14} style={{ animation: isRetesting ? 'spin 1s linear infinite' : 'none', pointerEvents: 'none' }} />
+            <span style={{ pointerEvents: 'none' }}>{isRetesting ? 'Running...' : 'Retest'}</span>
           </button>
           <button
             onClick={onClose}
@@ -1137,9 +1159,10 @@ function SmokeTestSection({ results, runDetails }) {
 }
 
 // Main Panel Component
-export default function TestRunSidePanel({ isOpen, onClose, testRunId, initialData }) {
+export default function TestRunSidePanel({ isOpen, onClose, testRunId, initialData, onTestStarted }) {
   const [generatingReport, setGeneratingReport] = useState(false);
   const [activeTab, setActiveTab] = useState('executive');
+  const [isRetesting, setIsRetesting] = useState(false);
 
   const { data: runDetails, isLoading, refetch } = useQuery({
     queryKey: ['testRun', testRunId],
@@ -1149,13 +1172,70 @@ export default function TestRunSidePanel({ isOpen, onClose, testRunId, initialDa
     select: (res) => res.data
   });
 
+  const handleRetest = async () => {
+    if (!runDetails || isRetesting) return;
+
+    const websiteId = runDetails.website_id;
+    const testType = runDetails.test_type?.toLowerCase();
+
+    setIsRetesting(true);
+    try {
+      let response;
+
+      // Call the appropriate test API based on test type
+      switch (testType) {
+        case 'smoke':
+          response = await runSmokeTest(websiteId);
+          break;
+        case 'performance':
+          response = await runPerformanceTest(websiteId);
+          break;
+        case 'pixel audit':
+          response = await runPixelAudit(websiteId);
+          break;
+        case 'load test':
+          response = await runLoadTest(websiteId);
+          break;
+        case 'accessibility':
+          response = await runAccessibilityTest(websiteId);
+          break;
+        case 'security scan':
+          response = await runSecurityScan(websiteId);
+          break;
+        case 'seo audit':
+          response = await runSEOAudit(websiteId);
+          break;
+        case 'visual regression':
+          response = await runVisualRegression(websiteId);
+          break;
+        default:
+          console.error('Unknown test type:', testType);
+          return;
+      }
+
+      // Notify parent component if callback provided
+      if (onTestStarted && response?.data) {
+        onTestStarted(response.data);
+      }
+
+      // Close the panel and let user see the new test in the list
+      onClose();
+
+    } catch (error) {
+      console.error('Failed to start retest:', error);
+    } finally {
+      setIsRetesting(false);
+    }
+  };
+
   const handleDownloadReport = async () => {
     if (!runDetails) return;
     setGeneratingReport(true);
     try {
       const response = await generateReport(testRunId);
       if (response.data?.pdfPath) {
-        window.open(`http://localhost:3004${response.data.pdfPath}`, '_blank');
+        // Use relative URL - nginx will proxy to backend
+        window.open(response.data.pdfPath, '_blank');
       }
     } catch (error) {
       console.error('Failed to generate report:', error);
@@ -1170,26 +1250,57 @@ export default function TestRunSidePanel({ isOpen, onClose, testRunId, initialDa
     <Sheet open={isOpen} onClose={onClose}>
       {runDetails && (
         <>
-          <PanelHeader runDetails={runDetails} onClose={onClose} onRefresh={refetch} isLoading={isLoading} />
+          <PanelHeader runDetails={runDetails} onClose={onClose} onRefresh={refetch} onRetest={handleRetest} isLoading={isLoading} isRetesting={isRetesting} />
 
-          {/* Stats Strip */}
+          {/* Stats Strip - Adaptive based on test type */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '12px 24px', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '20px', fontWeight: 700, color: '#111827' }}>{runDetails.total_tests || 0}</span>
-              <span style={{ fontSize: '13px', color: '#6b7280' }}>Total</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '20px', fontWeight: 700, color: '#10b981' }}>{runDetails.passed || 0}</span>
-              <span style={{ fontSize: '13px', color: '#6b7280' }}>Passed</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '20px', fontWeight: 700, color: '#ef4444' }}>{runDetails.failed || 0}</span>
-              <span style={{ fontSize: '13px', color: '#6b7280' }}>Failed</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Clock size={16} color="#6b7280" />
-              <span style={{ fontSize: '13px', color: '#6b7280' }}>{runDetails.duration_ms ? `${(runDetails.duration_ms / 1000).toFixed(2)}s` : '—'}</span>
-            </div>
+            {testType === 'load test' && runDetails.load_results ? (
+              // Load Test specific stats
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#3b82f6' }}>{runDetails.load_results.virtual_users || 0}</span>
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>VUs</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#111827' }}>{runDetails.load_results.requests_total || 0}</span>
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Requests</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#10b981' }}>{runDetails.load_results.throughput_rps?.toFixed(1) || 0}</span>
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Req/s</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 700, color: runDetails.load_results.error_rate > 0 ? '#ef4444' : '#10b981' }}>
+                    {runDetails.load_results.error_rate?.toFixed(1) || 0}%
+                  </span>
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Errors</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Clock size={16} color="#6b7280" />
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>{runDetails.load_results.duration_seconds || 30}s</span>
+                </div>
+              </>
+            ) : (
+              // Default stats for other test types
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#111827' }}>{runDetails.total_tests || 0}</span>
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Total</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#10b981' }}>{runDetails.passed || 0}</span>
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Passed</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#ef4444' }}>{runDetails.failed || 0}</span>
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Failed</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Clock size={16} color="#6b7280" />
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>{runDetails.duration_ms ? `${(runDetails.duration_ms / 1000).toFixed(2)}s` : '—'}</span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Tab Toggle */}
@@ -1245,7 +1356,6 @@ export default function TestRunSidePanel({ isOpen, onClose, testRunId, initialDa
                     <VisualRegressionGallery
                       visualData={runDetails.visual_results}
                       comparisons={runDetails.visual_results.comparisons}
-                      baseUrl="http://localhost:3004/screenshots"
                     />
                   </div>
                 )}
