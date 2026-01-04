@@ -1,0 +1,23 @@
+{
+  "name": "testing-agent-playwright",
+  "version": "1.0.0",
+  "description": "Playwright tests for AI Testing Agent",
+  "scripts": {
+    "test": "playwright test",
+    "test:chromium": "playwright test --project=chromium-desktop-1920",
+    "test:firefox": "playwright test --project=firefox-desktop",
+    "test:webkit": "playwright test --project=webkit-desktop",
+    "test:mobile": "playwright test --project=chromium-mobile-390",
+    "test:smoke": "playwright test tests/smoke",
+    "test:pixel": "playwright test tests/pixel-audit",
+    "report": "playwright show-report"
+  },
+  "keywords": ["playwright", "testing", "qa"],
+  "author": "Wassim / PixelCraftedMedia",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.10.0"
+  },
+  "dependencies": {}
+}

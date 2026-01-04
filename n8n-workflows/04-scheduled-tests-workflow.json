@@ -1,0 +1,285 @@
+{
+  "name": "AI Testing Agent - Scheduled Tests",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule - Daily at 2AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tbl7fCupLDhoIUmMW",
+        "options": {
+          "filterByFormula": "AND({Status} = 'Active', OR({Test Frequency} = 'Daily', AND({Test Frequency} = 'Weekly', WEEKDAY(NOW()) = 1)))"
+        }
+      },
+      "id": "get-scheduled-websites",
+      "name": "Get Scheduled Websites",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [450, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "split-websites",
+      "name": "Process Each Website",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tblsXiHpwJ88XvAq6",
+        "options": {},
+        "fields": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Run ID": "={{ $now.format('yyyy-MM-dd-HHmmss') }}-auto-{{ $json.fields.URL.split('/')[2] }}",
+            "Website": ["={{ $json.id }}"],
+            "Test Type": "Smoke",
+            "Status": "Running"
+          }
+        }
+      },
+      "id": "create-test-run",
+      "name": "Create Test Run",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [850, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://38.97.60.181:3003/api/test/smoke",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "target_url",
+              "value": "={{ $('Process Each Website').item.json.fields.URL }}"
+            },
+            {
+              "name": "browser",
+              "value": "chromium"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "run-smoke-test",
+      "name": "Run Smoke Test",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tblsXiHpwJ88XvAq6",
+        "id": "={{ $('Create Test Run').item.json.id }}",
+        "options": {},
+        "fields": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "={{ $json.success ? 'Pass' : 'Fail' }}",
+            "Total Tests": "={{ $json.summary.total }}",
+            "Passed": "={{ $json.summary.passed }}",
+            "Failed": "={{ $json.summary.failed }}"
+          }
+        }
+      },
+      "id": "update-test-run",
+      "name": "Update Test Run",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [1250, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tbl7fCupLDhoIUmMW",
+        "id": "={{ $('Process Each Website').item.json.id }}",
+        "options": {},
+        "fields": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Last Result": "={{ $('Run Smoke Test').item.json.success ? 'Pass' : 'Fail' }}"
+          }
+        }
+      },
+      "id": "update-website",
+      "name": "Update Website",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [1250, 480],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $('Run Smoke Test').item.json.success }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "check-if-failed",
+      "name": "Check if Failed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "content": "🔴 **Test Failed**\\n\\n**Website:** {{ $('Process Each Website').item.json.fields.URL }}\\n**Test Type:** Smoke Test\\n**Status:** Failed\\n**Passed:** {{ $('Run Smoke Test').item.json.summary.passed }} / {{ $('Run Smoke Test').item.json.summary.total }}\\n\\n**Failed Tests:**\\n{{ $('Run Smoke Test').item.json.results.filter(r => r.status === 'fail').map(r => `- ${r.name}: ${r.message}`).join('\\n') }}",
+        "options": {}
+      },
+      "id": "send-slack-notification",
+      "name": "Send Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.1,
+      "position": [1650, 200],
+      "credentials": {
+        "slackApi": {
+          "id": "slack-webhook",
+          "name": "Slack Webhook"
+        }
+      },
+      "disabled": true,
+      "notes": "Enable and configure Slack webhook"
+    }
+  ],
+  "connections": {
+    "Schedule - Daily at 2AM": {
+      "main": [
+        [
+          {
+            "node": "Get Scheduled Websites",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Scheduled Websites": {
+      "main": [
+        [
+          {
+            "node": "Process Each Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Each Website": {
+      "main": [
+        [
+          {
+            "node": "Create Test Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Test Run": {
+      "main": [
+        [
+          {
+            "node": "Run Smoke Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Smoke Test": {
+      "main": [
+        [
+          {
+            "node": "Update Test Run",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Test Run": {
+      "main": [
+        [
+          {
+            "node": "Check if Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Failed": {
+      "main": [
+        [
+          {
+            "node": "Send Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}

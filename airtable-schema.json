@@ -1,0 +1,863 @@
+{
+  "base": {
+    "name": "AI Testing Agent",
+    "tables": [
+      {
+        "name": "Clients",
+        "description": "Client management and contact information",
+        "fields": [
+          {
+            "name": "Client Name",
+            "type": "singleLineText",
+            "description": "Primary field - client company name"
+          },
+          {
+            "name": "Contact Email",
+            "type": "email",
+            "description": "Primary contact email for report delivery"
+          },
+          {
+            "name": "Slack Webhook",
+            "type": "url",
+            "description": "Optional - Slack webhook URL for notifications"
+          },
+          {
+            "name": "Asana Project ID",
+            "type": "singleLineText",
+            "description": "Optional - Asana project ID for task creation"
+          },
+          {
+            "name": "Status",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Active", "color": "greenBright"},
+              {"name": "Paused", "color": "yellowBright"},
+              {"name": "Archived", "color": "grayBright"}
+            ]
+          },
+          {
+            "name": "Created",
+            "type": "createdTime"
+          }
+        ]
+      },
+      {
+        "name": "Websites",
+        "description": "Websites to be tested",
+        "fields": [
+          {
+            "name": "URL",
+            "type": "url",
+            "description": "Primary field - website URL"
+          },
+          {
+            "name": "Client",
+            "type": "multipleRecordLinks",
+            "linkedTableName": "Clients"
+          },
+          {
+            "name": "Name",
+            "type": "singleLineText",
+            "description": "Friendly name e.g. VariableLib Main"
+          },
+          {
+            "name": "Login Required",
+            "type": "checkbox",
+            "description": "Does site need authentication?"
+          },
+          {
+            "name": "Login URL",
+            "type": "url"
+          },
+          {
+            "name": "Login Username",
+            "type": "singleLineText"
+          },
+          {
+            "name": "Login Password",
+            "type": "singleLineText",
+            "description": "Store securely or use password manager"
+          },
+          {
+            "name": "Test Frequency",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Daily", "color": "blueBright"},
+              {"name": "Weekly", "color": "greenBright"},
+              {"name": "On-demand", "color": "grayBright"}
+            ]
+          },
+          {
+            "name": "Browsers",
+            "type": "multipleSelects",
+            "options": [
+              {"name": "Chrome", "color": "blueBright"},
+              {"name": "Safari", "color": "cyanBright"},
+              {"name": "Firefox", "color": "orangeBright"}
+            ]
+          },
+          {
+            "name": "Viewports",
+            "type": "multipleSelects",
+            "options": [
+              {"name": "Mobile-360", "color": "purpleBright"},
+              {"name": "Mobile-390", "color": "purpleBright"},
+              {"name": "Tablet-768", "color": "tealBright"},
+              {"name": "Desktop-1366", "color": "blueBright"},
+              {"name": "Desktop-1920", "color": "blueBright"}
+            ]
+          },
+          {
+            "name": "Last Test Run",
+            "type": "date",
+            "options": {"dateFormat": "iso"}
+          },
+          {
+            "name": "Last Result",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Pass", "color": "greenBright"},
+              {"name": "Fail", "color": "redBright"},
+              {"name": "Partial", "color": "yellowBright"},
+              {"name": "Error", "color": "orangeBright"}
+            ]
+          },
+          {
+            "name": "Last Report URL",
+            "type": "url"
+          },
+          {
+            "name": "Status",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Active", "color": "greenBright"},
+              {"name": "Paused", "color": "grayBright"}
+            ]
+          },
+          {
+            "name": "Run Smoke Test",
+            "type": "button",
+            "options": {
+              "label": "▶️ Run Smoke Test",
+              "url": "https://n8n-webhook-url-will-be-set-later"
+            }
+          },
+          {
+            "name": "Run Full Suite",
+            "type": "button",
+            "options": {
+              "label": "🚀 Run Full Suite",
+              "url": "https://n8n-webhook-url-will-be-set-later"
+            }
+          },
+          {
+            "name": "Generate Tests",
+            "type": "button",
+            "options": {
+              "label": "🤖 Generate Test Cases",
+              "url": "https://n8n-webhook-url-will-be-set-later"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Test Configurations",
+        "description": "Test configuration presets",
+        "fields": [
+          {
+            "name": "Config Name",
+            "type": "singleLineText"
+          },
+          {
+            "name": "Website",
+            "type": "multipleRecordLinks",
+            "linkedTableName": "Websites"
+          },
+          {
+            "name": "Test Types",
+            "type": "multipleSelects",
+            "options": [
+              {"name": "Smoke", "color": "blueBright"},
+              {"name": "Regression", "color": "greenBright"},
+              {"name": "Performance", "color": "orangeBright"},
+              {"name": "Load", "color": "redBright"},
+              {"name": "Pixel Audit", "color": "purpleBright"},
+              {"name": "Accessibility", "color": "tealBright"}
+            ]
+          },
+          {
+            "name": "Performance Thresholds",
+            "type": "multilineText",
+            "description": "JSON: {\"LCP\": 2500, \"CLS\": 0.1, \"TTFB\": 800}"
+          },
+          {
+            "name": "Load Test Config",
+            "type": "multilineText",
+            "description": "JSON: {\"vus\": 10, \"duration\": \"30s\"}"
+          },
+          {
+            "name": "Pixel Vendors",
+            "type": "multipleSelects",
+            "options": [
+              {"name": "GA4", "color": "orangeBright"},
+              {"name": "Meta Pixel", "color": "blueBright"},
+              {"name": "GTM", "color": "yellowBright"},
+              {"name": "Google Ads", "color": "greenBright"},
+              {"name": "TikTok", "color": "pinkBright"},
+              {"name": "LinkedIn", "color": "cyanBright"},
+              {"name": "Pinterest", "color": "redBright"},
+              {"name": "Hotjar", "color": "purpleBright"},
+              {"name": "Clarity", "color": "tealBright"}
+            ]
+          },
+          {
+            "name": "Custom Test Steps",
+            "type": "multilineText",
+            "description": "JSON array of custom test steps"
+          },
+          {
+            "name": "Enabled",
+            "type": "checkbox"
+          }
+        ]
+      },
+      {
+        "name": "Test Runs",
+        "description": "Test execution history",
+        "fields": [
+          {
+            "name": "Run ID",
+            "type": "autoNumber"
+          },
+          {
+            "name": "Website",
+            "type": "multipleRecordLinks",
+            "linkedTableName": "Websites"
+          },
+          {
+            "name": "Test Type",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Smoke", "color": "blueBright"},
+              {"name": "Regression", "color": "greenBright"},
+              {"name": "Performance", "color": "orangeBright"},
+              {"name": "Load", "color": "redBright"},
+              {"name": "Pixel Audit", "color": "purpleBright"},
+              {"name": "Full Suite", "color": "pinkBright"}
+            ]
+          },
+          {
+            "name": "Triggered By",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Manual", "color": "blueBright"},
+              {"name": "Schedule", "color": "greenBright"},
+              {"name": "Webhook", "color": "purpleBright"}
+            ]
+          },
+          {
+            "name": "Started At",
+            "type": "dateTime"
+          },
+          {
+            "name": "Completed At",
+            "type": "dateTime"
+          },
+          {
+            "name": "Duration Seconds",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Status",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Queued", "color": "grayBright"},
+              {"name": "Running", "color": "yellowBright"},
+              {"name": "Pass", "color": "greenBright"},
+              {"name": "Fail", "color": "redBright"},
+              {"name": "Error", "color": "orangeBright"}
+            ]
+          },
+          {
+            "name": "Total Tests",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Passed",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Failed",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Skipped",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Report URL",
+            "type": "url"
+          },
+          {
+            "name": "Summary",
+            "type": "multilineText"
+          },
+          {
+            "name": "Error Log",
+            "type": "multilineText"
+          }
+        ]
+      },
+      {
+        "name": "Test Results",
+        "description": "Individual test results",
+        "fields": [
+          {
+            "name": "Result ID",
+            "type": "autoNumber"
+          },
+          {
+            "name": "Test Run",
+            "type": "multipleRecordLinks",
+            "linkedTableName": "Test Runs"
+          },
+          {
+            "name": "Test Name",
+            "type": "singleLineText"
+          },
+          {
+            "name": "Category",
+            "type": "singleSelect",
+            "options": [
+              {"name": "UI", "color": "blueBright"},
+              {"name": "UX", "color": "purpleBright"},
+              {"name": "Performance", "color": "orangeBright"},
+              {"name": "Load", "color": "redBright"},
+              {"name": "Pixel", "color": "pinkBright"},
+              {"name": "Accessibility", "color": "tealBright"}
+            ]
+          },
+          {
+            "name": "Browser",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Chrome", "color": "blueBright"},
+              {"name": "Safari", "color": "cyanBright"},
+              {"name": "Firefox", "color": "orangeBright"}
+            ]
+          },
+          {
+            "name": "Viewport",
+            "type": "singleSelect",
+            "options": [
+              {"name": "360x800", "color": "purpleBright"},
+              {"name": "390x844", "color": "purpleBright"},
+              {"name": "768x1024", "color": "tealBright"},
+              {"name": "1366x768", "color": "blueBright"},
+              {"name": "1920x1080", "color": "blueBright"}
+            ]
+          },
+          {
+            "name": "Status",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Pass", "color": "greenBright"},
+              {"name": "Fail", "color": "redBright"},
+              {"name": "Skip", "color": "grayBright"}
+            ]
+          },
+          {
+            "name": "Duration MS",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Error Message",
+            "type": "multilineText"
+          },
+          {
+            "name": "Screenshot",
+            "type": "multipleAttachments"
+          },
+          {
+            "name": "Video",
+            "type": "multipleAttachments"
+          },
+          {
+            "name": "Selector",
+            "type": "singleLineText"
+          },
+          {
+            "name": "Expected",
+            "type": "multilineText"
+          },
+          {
+            "name": "Actual",
+            "type": "multilineText"
+          }
+        ]
+      },
+      {
+        "name": "Performance Metrics",
+        "description": "Lighthouse and performance data",
+        "fields": [
+          {
+            "name": "Metric ID",
+            "type": "autoNumber"
+          },
+          {
+            "name": "Test Run",
+            "type": "multipleRecordLinks",
+            "linkedTableName": "Test Runs"
+          },
+          {
+            "name": "Page URL",
+            "type": "url"
+          },
+          {
+            "name": "Browser",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Chrome", "color": "blueBright"},
+              {"name": "Safari", "color": "cyanBright"},
+              {"name": "Firefox", "color": "orangeBright"}
+            ]
+          },
+          {
+            "name": "Viewport",
+            "type": "singleLineText"
+          },
+          {
+            "name": "LCP",
+            "type": "number",
+            "description": "Largest Contentful Paint (ms)"
+          },
+          {
+            "name": "CLS",
+            "type": "number",
+            "options": {"precision": 3},
+            "description": "Cumulative Layout Shift"
+          },
+          {
+            "name": "INP",
+            "type": "number",
+            "description": "Interaction to Next Paint (ms)"
+          },
+          {
+            "name": "FCP",
+            "type": "number",
+            "description": "First Contentful Paint (ms)"
+          },
+          {
+            "name": "TTFB",
+            "type": "number",
+            "description": "Time to First Byte (ms)"
+          },
+          {
+            "name": "Total Requests",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Page Size KB",
+            "type": "number"
+          },
+          {
+            "name": "Performance Score",
+            "type": "number",
+            "options": {"precision": 0},
+            "description": "Lighthouse 0-100"
+          },
+          {
+            "name": "Accessibility Score",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "SEO Score",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Best Practices Score",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Status",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Good", "color": "greenBright"},
+              {"name": "Needs Work", "color": "yellowBright"},
+              {"name": "Poor", "color": "redBright"}
+            ]
+          },
+          {
+            "name": "Full Report JSON",
+            "type": "multilineText"
+          }
+        ]
+      },
+      {
+        "name": "Load Test Results",
+        "description": "k6 load testing results",
+        "fields": [
+          {
+            "name": "Load Test ID",
+            "type": "autoNumber"
+          },
+          {
+            "name": "Test Run",
+            "type": "multipleRecordLinks",
+            "linkedTableName": "Test Runs"
+          },
+          {
+            "name": "Endpoint",
+            "type": "url"
+          },
+          {
+            "name": "HTTP Method",
+            "type": "singleSelect",
+            "options": [
+              {"name": "GET", "color": "blueBright"},
+              {"name": "POST", "color": "greenBright"},
+              {"name": "PUT", "color": "yellowBright"},
+              {"name": "DELETE", "color": "redBright"}
+            ]
+          },
+          {
+            "name": "Virtual Users",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Duration Seconds",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Total Requests",
+            "type": "number",
+            "options": {"precision": 0}
+          },
+          {
+            "name": "Requests Per Second",
+            "type": "number",
+            "options": {"precision": 2}
+          },
+          {
+            "name": "P50 MS",
+            "type": "number",
+            "description": "Median latency"
+          },
+          {
+            "name": "P90 MS",
+            "type": "number"
+          },
+          {
+            "name": "P95 MS",
+            "type": "number"
+          },
+          {
+            "name": "P99 MS",
+            "type": "number"
+          },
+          {
+            "name": "Error Rate Percent",
+            "type": "number",
+            "options": {"precision": 2}
+          },
+          {
+            "name": "Data Received KB",
+            "type": "number"
+          },
+          {
+            "name": "Data Sent KB",
+            "type": "number"
+          },
+          {
+            "name": "Status",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Pass", "color": "greenBright"},
+              {"name": "Fail", "color": "redBright"}
+            ]
+          },
+          {
+            "name": "Threshold Breaches",
+            "type": "multilineText"
+          },
+          {
+            "name": "Full Report JSON",
+            "type": "multilineText"
+          }
+        ]
+      },
+      {
+        "name": "Pixel Audit Results",
+        "description": "Marketing pixel verification",
+        "fields": [
+          {
+            "name": "Audit ID",
+            "type": "autoNumber"
+          },
+          {
+            "name": "Test Run",
+            "type": "multipleRecordLinks",
+            "linkedTableName": "Test Runs"
+          },
+          {
+            "name": "Page URL",
+            "type": "url"
+          },
+          {
+            "name": "Pixel Name",
+            "type": "singleSelect",
+            "options": [
+              {"name": "GA4", "color": "orangeBright"},
+              {"name": "Meta Pixel", "color": "blueBright"},
+              {"name": "GTM", "color": "yellowBright"},
+              {"name": "Google Ads", "color": "greenBright"},
+              {"name": "TikTok", "color": "pinkBright"},
+              {"name": "LinkedIn", "color": "cyanBright"},
+              {"name": "Pinterest", "color": "redBright"},
+              {"name": "Hotjar", "color": "purpleBright"},
+              {"name": "Clarity", "color": "tealBright"}
+            ]
+          },
+          {
+            "name": "Expected",
+            "type": "checkbox",
+            "description": "Should this pixel be present?"
+          },
+          {
+            "name": "Detected",
+            "type": "checkbox",
+            "description": "Was it found?"
+          },
+          {
+            "name": "Status",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Found", "color": "greenBright"},
+              {"name": "Missing", "color": "redBright"},
+              {"name": "Unexpected", "color": "yellowBright"},
+              {"name": "Error", "color": "orangeBright"}
+            ]
+          },
+          {
+            "name": "Script URL",
+            "type": "url"
+          },
+          {
+            "name": "Container ID",
+            "type": "singleLineText",
+            "description": "GTM/GA4 ID found"
+          },
+          {
+            "name": "Events Detected",
+            "type": "multilineText",
+            "description": "JSON array of events"
+          },
+          {
+            "name": "Network Calls",
+            "type": "multilineText",
+            "description": "JSON of network requests"
+          },
+          {
+            "name": "Evidence Screenshot",
+            "type": "multipleAttachments"
+          },
+          {
+            "name": "HAR File",
+            "type": "multipleAttachments"
+          }
+        ]
+      },
+      {
+        "name": "Failures",
+        "description": "Failed tests and issue tracking",
+        "fields": [
+          {
+            "name": "Failure ID",
+            "type": "autoNumber"
+          },
+          {
+            "name": "Test Result",
+            "type": "multipleRecordLinks",
+            "linkedTableName": "Test Results"
+          },
+          {
+            "name": "Website",
+            "type": "multipleRecordLinks",
+            "linkedTableName": "Websites"
+          },
+          {
+            "name": "Priority",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Critical", "color": "redBright"},
+              {"name": "High", "color": "orangeBright"},
+              {"name": "Medium", "color": "yellowBright"},
+              {"name": "Low", "color": "grayBright"}
+            ]
+          },
+          {
+            "name": "Failure Type",
+            "type": "singleSelect",
+            "options": [
+              {"name": "UI Bug", "color": "blueBright"},
+              {"name": "Performance", "color": "orangeBright"},
+              {"name": "Broken Link", "color": "redBright"},
+              {"name": "Missing Pixel", "color": "purpleBright"},
+              {"name": "Load Error", "color": "pinkBright"},
+              {"name": "Accessibility", "color": "tealBright"}
+            ]
+          },
+          {
+            "name": "Summary",
+            "type": "singleLineText"
+          },
+          {
+            "name": "Reproduction Steps",
+            "type": "multilineText"
+          },
+          {
+            "name": "Asana Task URL",
+            "type": "url"
+          },
+          {
+            "name": "Asana Task ID",
+            "type": "singleLineText"
+          },
+          {
+            "name": "Resolution Status",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Open", "color": "redBright"},
+              {"name": "In Progress", "color": "yellowBright"},
+              {"name": "Resolved", "color": "greenBright"},
+              {"name": "Won't Fix", "color": "grayBright"}
+            ]
+          },
+          {
+            "name": "Assigned To",
+            "type": "singleLineText"
+          },
+          {
+            "name": "Notes",
+            "type": "multilineText"
+          },
+          {
+            "name": "Resolved At",
+            "type": "dateTime"
+          }
+        ]
+      },
+      {
+        "name": "Test Cases",
+        "description": "LLM-generated and manual test cases",
+        "fields": [
+          {
+            "name": "Test Case ID",
+            "type": "autoNumber"
+          },
+          {
+            "name": "Website",
+            "type": "multipleRecordLinks",
+            "linkedTableName": "Websites"
+          },
+          {
+            "name": "Page URL",
+            "type": "url"
+          },
+          {
+            "name": "Test Name",
+            "type": "singleLineText"
+          },
+          {
+            "name": "Test Type",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Smoke", "color": "blueBright"},
+              {"name": "Regression", "color": "greenBright"},
+              {"name": "E2E", "color": "purpleBright"}
+            ]
+          },
+          {
+            "name": "Category",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Navigation", "color": "blueBright"},
+              {"name": "Form", "color": "greenBright"},
+              {"name": "Content", "color": "yellowBright"},
+              {"name": "Interaction", "color": "purpleBright"},
+              {"name": "Visual", "color": "pinkBright"}
+            ]
+          },
+          {
+            "name": "Priority",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Critical", "color": "redBright"},
+              {"name": "High", "color": "orangeBright"},
+              {"name": "Medium", "color": "yellowBright"},
+              {"name": "Low", "color": "grayBright"}
+            ]
+          },
+          {
+            "name": "Preconditions",
+            "type": "multilineText"
+          },
+          {
+            "name": "Test Steps",
+            "type": "multilineText",
+            "description": "JSON array of steps"
+          },
+          {
+            "name": "Expected Result",
+            "type": "multilineText"
+          },
+          {
+            "name": "Selector",
+            "type": "singleLineText"
+          },
+          {
+            "name": "Generated By",
+            "type": "singleSelect",
+            "options": [
+              {"name": "LLM", "color": "purpleBright"},
+              {"name": "Manual", "color": "blueBright"}
+            ]
+          },
+          {
+            "name": "Approved",
+            "type": "checkbox"
+          },
+          {
+            "name": "Enabled",
+            "type": "checkbox"
+          },
+          {
+            "name": "Last Run Status",
+            "type": "singleSelect",
+            "options": [
+              {"name": "Not Run", "color": "grayBright"},
+              {"name": "Pass", "color": "greenBright"},
+              {"name": "Fail", "color": "redBright"}
+            ]
+          },
+          {
+            "name": "Created At",
+            "type": "createdTime"
+          }
+        ]
+      }
+    ]
+  }
+}

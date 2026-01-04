@@ -1,0 +1,228 @@
+{
+  "name": "AI Testing Agent - Smoke Test",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "smoke-test",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-smoke",
+      "name": "Webhook - Smoke Test",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "smoke-test"
+    },
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "url": "https://api.airtable.com/v0/appgwbxf0N9wb3PdM/Websites/{{ $json.airtable_record_id }}",
+        "options": {}
+      },
+      "id": "get-website-details",
+      "name": "Get Website from Airtable",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "airtable-auth",
+          "name": "Airtable Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://38.97.60.181:3003/api/test/smoke",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "target_url",
+              "value": "={{ $json.fields.URL }}"
+            },
+            {
+              "name": "browser",
+              "value": "chromium"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "run-smoke-test",
+      "name": "Run Smoke Test",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tblsXiHpwJ88XvAq6",
+        "options": {},
+        "fields": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Run ID": "={{ $now.format('yyyy-MM-dd-HHmmss') }}-{{ $json.target_url.split('/')[2] }}",
+            "Website": ["={{ $('Get Website from Airtable').item.json.id }}"],
+            "Test Type": "Smoke",
+            "Status": "={{ $json.success ? 'Pass' : 'Fail' }}",
+            "Total Tests": "={{ $json.summary.total }}",
+            "Passed": "={{ $json.summary.passed }}",
+            "Failed": "={{ $json.summary.failed }}",
+            "Report URL": "={{ $json.report_url || '' }}"
+          }
+        }
+      },
+      "id": "create-test-run",
+      "name": "Create Test Run Record",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [850, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tblk1mpI8KziIQwk0",
+        "options": {},
+        "fields": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Result ID": "={{ $now.toMillis() }}-{{ $index }}",
+            "Test Run": ["={{ $('Create Test Run Record').item.json.id }}"],
+            "Test Name": "={{ $item('Run Smoke Test').json.results[$index].name }}",
+            "Category": "UI",
+            "Status": "={{ $item('Run Smoke Test').json.results[$index].status === 'pass' ? 'Pass' : 'Fail' }}",
+            "Duration MS": "={{ $item('Run Smoke Test').json.results[$index].duration_ms || 0 }}",
+            "Error Message": "={{ $item('Run Smoke Test').json.results[$index].message || '' }}"
+          }
+        }
+      },
+      "id": "store-test-results",
+      "name": "Store Test Results",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [1050, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\", \"test_run_id\": $('Create Test Run Record').item.json.id, \"results\": $('Run Smoke Test').item.json } }}"
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tbl7fCupLDhoIUmMW",
+        "id": "={{ $('Get Website from Airtable').item.json.id }}",
+        "options": {},
+        "fields": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Last Result": "={{ $('Run Smoke Test').item.json.success ? 'Pass' : 'Fail' }}"
+          }
+        }
+      },
+      "id": "update-website",
+      "name": "Update Website Status",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [850, 480],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Smoke Test": {
+      "main": [
+        [
+          {
+            "node": "Get Website from Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Website from Airtable": {
+      "main": [
+        [
+          {
+            "node": "Run Smoke Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Smoke Test": {
+      "main": [
+        [
+          {
+            "node": "Create Test Run Record",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Website Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Test Run Record": {
+      "main": [
+        [
+          {
+            "node": "Store Test Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Test Results": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}

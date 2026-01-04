@@ -1,0 +1,230 @@
+{
+  "name": "AI Testing Agent - Performance Test",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "performance-test",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-performance",
+      "name": "Webhook - Performance Test",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "performance-test"
+    },
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "url": "https://api.airtable.com/v0/appgwbxf0N9wb3PdM/Websites/{{ $json.airtable_record_id }}",
+        "options": {}
+      },
+      "id": "get-website-details",
+      "name": "Get Website from Airtable",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "airtable-auth",
+          "name": "Airtable Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://38.97.60.181:3003/api/test/performance",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "target_url",
+              "value": "={{ $json.fields.URL }}"
+            },
+            {
+              "name": "device",
+              "value": "desktop"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "run-performance-test",
+      "name": "Run Performance Test",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tblsXiHpwJ88XvAq6",
+        "options": {},
+        "fields": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Run ID": "={{ $now.format('yyyy-MM-dd-HHmmss') }}-perf-{{ $json.target_url.split('/')[2] }}",
+            "Website": ["={{ $('Get Website from Airtable').item.json.id }}"],
+            "Test Type": "Performance",
+            "Status": "={{ $json.success ? 'Pass' : 'Fail' }}",
+            "Total Tests": 1,
+            "Passed": "={{ $json.success ? 1 : 0 }}",
+            "Failed": "={{ $json.success ? 0 : 1 }}",
+            "Report URL": "={{ $json.report_url || '' }}"
+          }
+        }
+      },
+      "id": "create-test-run",
+      "name": "Create Test Run Record",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [850, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tbl2ND7Ppsplb5rjN",
+        "options": {},
+        "fields": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Metric ID": "={{ $now.toMillis() }}-perf",
+            "Test Run": ["={{ $('Create Test Run Record').item.json.id }}"],
+            "Page URL": "={{ $item('Run Performance Test').json.metrics ? $item('Get Website from Airtable').item.json.fields.URL : '' }}",
+            "LCP": "={{ $item('Run Performance Test').json.metrics.LCP || 0 }}",
+            "CLS": "={{ $item('Run Performance Test').json.metrics.CLS || 0 }}",
+            "FCP": "={{ $item('Run Performance Test').json.metrics.FCP || 0 }}",
+            "TTFB": "={{ $item('Run Performance Test').json.metrics.TTFB || 0 }}",
+            "Performance Score": "={{ $item('Run Performance Test').json.scores.performance || 0 }}",
+            "Status": "={{ $item('Run Performance Test').json.status || 'Unknown' }}"
+          }
+        }
+      },
+      "id": "store-performance-metrics",
+      "name": "Store Performance Metrics",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [1050, 300],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\", \"test_run_id\": $('Create Test Run Record').item.json.id, \"metrics\": $('Run Performance Test').item.json.metrics, \"scores\": $('Run Performance Test').item.json.scores } }}"
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tbl7fCupLDhoIUmMW",
+        "id": "={{ $('Get Website from Airtable').item.json.id }}",
+        "options": {},
+        "fields": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Last Result": "={{ $('Run Performance Test').item.json.success ? 'Pass' : 'Fail' }}"
+          }
+        }
+      },
+      "id": "update-website",
+      "name": "Update Website Status",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [850, 480],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Performance Test": {
+      "main": [
+        [
+          {
+            "node": "Get Website from Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Website from Airtable": {
+      "main": [
+        [
+          {
+            "node": "Run Performance Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Performance Test": {
+      "main": [
+        [
+          {
+            "node": "Create Test Run Record",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Website Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Test Run Record": {
+      "main": [
+        [
+          {
+            "node": "Store Performance Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Performance Metrics": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}

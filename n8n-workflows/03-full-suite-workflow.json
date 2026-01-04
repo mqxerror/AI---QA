@@ -1,0 +1,298 @@
+{
+  "name": "AI Testing Agent - Full Suite",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "full-suite",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-full-suite",
+      "name": "Webhook - Full Suite",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 400],
+      "webhookId": "full-suite"
+    },
+    {
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "url": "https://api.airtable.com/v0/appgwbxf0N9wb3PdM/Websites/{{ $json.airtable_record_id }}",
+        "options": {}
+      },
+      "id": "get-website-details",
+      "name": "Get Website from Airtable",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [450, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "airtable-auth",
+          "name": "Airtable Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tblsXiHpwJ88XvAq6",
+        "options": {},
+        "fields": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Run ID": "={{ $now.format('yyyy-MM-dd-HHmmss') }}-suite-{{ $json.fields.URL.split('/')[2] }}",
+            "Website": ["={{ $json.id }}"],
+            "Test Type": "Full Suite",
+            "Status": "Running"
+          }
+        }
+      },
+      "id": "create-test-run",
+      "name": "Create Test Run Record",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [650, 400],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://38.97.60.181:3003/api/test/smoke",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "target_url",
+              "value": "={{ $('Get Website from Airtable').item.json.fields.URL }}"
+            },
+            {
+              "name": "browser",
+              "value": "chromium"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "run-smoke-test",
+      "name": "1. Run Smoke Test",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 250]
+    },
+    {
+      "parameters": {
+        "url": "http://38.97.60.181:3003/api/test/performance",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "target_url",
+              "value": "={{ $('Get Website from Airtable').item.json.fields.URL }}"
+            },
+            {
+              "name": "device",
+              "value": "desktop"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "run-performance-test",
+      "name": "2. Run Performance Test",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 250]
+    },
+    {
+      "parameters": {
+        "url": "http://38.97.60.181:3003/api/test/pixel-audit",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "target_url",
+              "value": "={{ $('Get Website from Airtable').item.json.fields.URL }}"
+            },
+            {
+              "name": "expected_pixels",
+              "value": "=[\"GA4\", \"GTM\"]"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "run-pixel-audit",
+      "name": "3. Run Pixel Audit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1250, 250]
+    },
+    {
+      "parameters": {
+        "jsCode": "const smokeTest = $input.item(0).json;\nconst perfTest = $input.item(1).json;\nconst pixelTest = $input.item(2).json;\n\nconst totalTests = (smokeTest.summary?.total || 0) + 1 + (pixelTest.pixels_checked || 0);\nconst passedTests = (smokeTest.summary?.passed || 0) + (perfTest.success ? 1 : 0) + (pixelTest.all_found || 0);\nconst failedTests = totalTests - passedTests;\n\nconst overallStatus = failedTests === 0 ? 'Pass' : 'Fail';\n\nreturn {\n  json: {\n    test_run_id: $('Create Test Run Record').item.json.id,\n    overall_status: overallStatus,\n    total_tests: totalTests,\n    passed: passedTests,\n    failed: failedTests,\n    smoke_test: smokeTest,\n    performance_test: perfTest,\n    pixel_audit: pixelTest\n  }\n};"
+      },
+      "id": "aggregate-results",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1450, 400]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "application": "appgwbxf0N9wb3PdM",
+        "table": "tblsXiHpwJ88XvAq6",
+        "id": "={{ $json.test_run_id }}",
+        "options": {},
+        "fields": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "={{ $json.overall_status }}",
+            "Total Tests": "={{ $json.total_tests }}",
+            "Passed": "={{ $json.passed }}",
+            "Failed": "={{ $json.failed }}"
+          }
+        }
+      },
+      "id": "update-test-run",
+      "name": "Update Test Run",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [1650, 400],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "airtable-token",
+          "name": "Airtable Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1850, 400]
+    }
+  ],
+  "connections": {
+    "Webhook - Full Suite": {
+      "main": [
+        [
+          {
+            "node": "Get Website from Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Website from Airtable": {
+      "main": [
+        [
+          {
+            "node": "Create Test Run Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Test Run Record": {
+      "main": [
+        [
+          {
+            "node": "1. Run Smoke Test",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Run Smoke Test": {
+      "main": [
+        [
+          {
+            "node": "2. Run Performance Test",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aggregate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Run Performance Test": {
+      "main": [
+        [
+          {
+            "node": "3. Run Pixel Audit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Aggregate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Run Pixel Audit": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Results": {
+      "main": [
+        [
+          {
+            "node": "Update Test Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Test Run": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {}
+}

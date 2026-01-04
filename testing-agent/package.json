@@ -1,0 +1,13 @@
+{
+  "name": "qa-testing-agent",
+  "version": "1.0.0",
+  "description": "QA Testing Agent with BMAD-METHOD integration",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test command specified\" && exit 1"
+  },
+  "devDependencies": {
+    "bmad-method": "^6.0.0-alpha.22",
+    "@znsmtd/framework": "^6.3.2"
+  }
+}

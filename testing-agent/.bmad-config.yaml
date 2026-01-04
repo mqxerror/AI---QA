@@ -1,0 +1,93 @@
+# BMAD-METHOD Configuration for QA Testing Agent
+# Version: 6.0.0+
+# Framework: Official BMAD-METHOD
+
+project:
+  name: "QA Testing Agent"
+  description: "Automated testing agent with 8 test types (Performance, Load, Visual, Security, SEO, Accessibility, Smoke, Pixel Perfect)"
+  type: "testing-automation"
+  tech_stack:
+    core:
+      - Docker
+      - Docker Compose
+      - Playwright
+      - k6 (load testing)
+    integration:
+      - MinIO (object storage)
+      - n8n (workflow automation)
+    testing:
+      - Lighthouse (performance)
+      - Playwright (browser automation)
+      - Pixelmatch (visual regression)
+      - Custom security scanner
+      - SEO auditor
+
+  # Folder structure following BMAD V6+ conventions
+  folders:
+    bmad_folder: ".bmad"
+    output_folder: "_bmad-output"
+    planning_artifacts: "_bmad-output/planning-artifacts"
+    implementation_artifacts: "_bmad-output/implementation-artifacts"
+    docs: "PRDs"  # Using existing PRDs folder
+
+# Development phase
+phase:
+  current: 4  # Implementation phase
+  completed:
+    - 0  # Documentation
+    - 1  # Analysis
+    - 2  # Planning
+    - 3  # Solutioning
+
+# Scale-adaptive level (0-4)
+complexity:
+  level: 2  # Medium complexity project
+  reasoning: "Modular testing agent with multiple test types and integrations"
+
+# Team structure
+team:
+  roles:
+    - QA Architect
+    - Test Automation Engineer
+    - DevOps Engineer
+
+# Current sprint/iteration
+iteration:
+  current: "Production Testing Agent"
+  goals:
+    - "Deploy testing agent infrastructure"
+    - "Integrate with dashboard"
+    - "Automate test execution"
+    - "Generate comprehensive reports"
+
+# Testing infrastructure
+testing:
+  agent_url: "http://38.97.60.181:3003"
+  minio_url: "http://38.97.60.181:9002"
+  report_storage: "MinIO S3-compatible"
+
+  test_types:
+    - performance  # Lighthouse
+    - load         # k6
+    - visual       # Pixelmatch
+    - security     # Custom scanner
+    - seo          # SEO auditor
+    - accessibility # Accessibility checks
+    - smoke        # Critical path validation
+    - pixel_perfect # Visual precision
+
+# Deployment
+deployment:
+  platform: "Docker Compose"
+  server: "38.97.60.181"
+  ports:
+    test_api: 3003
+    minio: 9002
+
+# Quality metrics
+quality:
+  test_coverage_target: 90
+  performance_budget:
+    lighthouse_score: 90
+    page_load_time: "< 2s"
+  automation_coverage: "100% of critical paths"
