@@ -1,6 +1,60 @@
 version: '3.8'
 
 services:
+  # Test Execution API (Playwright, k6, Lighthouse)
+  test-api:
+    build: ./test-api
+    container_name: qa-test-api
+    ports:
+      - "3003:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_USE_SSL=false
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - MINIO_BUCKET=testing-agent
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-http://38.97.60.181:9002}
+      - LOG_LEVEL=info
+    volumes:
+      - test-artifacts:/app/artifacts
+    depends_on:
+      - minio
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - qa-network
+
+  # MinIO Storage for artifacts
+  minio:
+    image: minio/minio:latest
+    container_name: qa-minio
+    ports:
+      - "9002:9000"
+      - "9003:9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - qa-network
+
+  # Dashboard Backend API
   dashboard-backend:
     build: ./backend
     container_name: qa-dashboard-backend
@@ -9,8 +63,8 @@ services:
     environment:
       - PORT=3004
       - NODE_ENV=production
-      - TEST_API_URL=http://38.97.60.181:3003
-      - MINIO_URL=http://38.97.60.181:9002
+      - TEST_API_URL=http://test-api:3001
+      - MINIO_URL=http://minio:9000
       - DATABASE_PATH=/app/database/qa-tests.db
       - JWT_SECRET=${JWT_SECRET:-change-this-secret-key-in-production}
       - JWT_EXPIRES_IN=7d
@@ -21,6 +75,9 @@ services:
       - qa-database:/app/database
       - qa-reports:/app/reports
       - qa-screenshots:/app/screenshots
+    depends_on:
+      test-api:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3004/api/health"]
       interval: 30s
@@ -31,6 +88,7 @@ services:
     networks:
       - qa-network
 
+  # Dashboard Frontend
   dashboard-frontend:
     build: ./frontend
     container_name: qa-dashboard-frontend
@@ -59,4 +117,8 @@ volumes:
   qa-reports:
     driver: local
   qa-screenshots:
+    driver: local
+  test-artifacts:
+    driver: local
+  minio-data:
     driver: local
