@@ -1,8 +1,9 @@
 FROM node:18-bullseye-slim
 
-# Install system dependencies for Playwright and Lighthouse
+# Install system dependencies for Playwright, Lighthouse, and k6
 RUN apt-get update && apt-get install -y \
     wget \
+    gnupg \
     ca-certificates \
     fonts-liberation \
     libasound2 \
@@ -40,6 +41,17 @@ RUN apt-get update && apt-get install -y \
     xdg-utils \
     curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Install k6 for load testing
+RUN gpg -k && \
+    gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+        --keyserver hkp://keyserver.ubuntu.com:80 \
+        --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69 && \
+    echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | \
+        tee /etc/apt/sources.list.d/k6.list && \
+    apt-get update && \
+    apt-get install -y k6 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR /app

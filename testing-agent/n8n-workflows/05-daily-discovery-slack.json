@@ -1,0 +1,219 @@
+{
+  "name": "QA Daily Discovery Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24,
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Daily 8 AM Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://38.97.60.181:3003/api/test/discover",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ domain: $json.domain || 'mercan.com', depth: 2, maxPages: 50 }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "discover-site",
+      "name": "Discover Site",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format discovery results for Slack\nconst result = $input.first().json;\n\nif (!result.success) {\n  return [{\n    json: {\n      text: `:warning: Discovery failed for ${result.domain || 'unknown'}`,\n      blocks: []\n    }\n  }];\n}\n\nconst { domain, summary, testSuites, reportUrl, duration } = result;\n\n// Build page type breakdown\nconst typeEmojis = {\n  form: ':pencil:',\n  article: ':newspaper:',\n  landing: ':house:',\n  ecommerce: ':shopping_cart:',\n  legal: ':scales:',\n  faq: ':question:',\n  generic: ':globe_with_meridians:'\n};\n\nlet pageBreakdown = '';\nfor (const [type, count] of Object.entries(summary.byType || {})) {\n  const emoji = typeEmojis[type] || ':page_facing_up:';\n  pageBreakdown += `${emoji} *${type.charAt(0).toUpperCase() + type.slice(1)}*: ${count} pages\\n`;\n}\n\n// Build test suites summary\nlet suiteSummary = '';\nfor (const suite of (testSuites || []).slice(0, 5)) {\n  const priorityEmoji = suite.priority === 'critical' ? ':rotating_light:' : \n                        suite.priority === 'high' ? ':red_circle:' : \n                        suite.priority === 'medium' ? ':large_orange_circle:' : ':white_circle:';\n  suiteSummary += `${priorityEmoji} *${suite.name}* (${suite.totalPages} pages) - ${suite.estimatedDuration}\\n`;\n}\n\nconst blocks = [\n  {\n    type: 'header',\n    text: {\n      type: 'plain_text',\n      text: `:mag: QA Discovery Report: ${domain}`,\n      emoji: true\n    }\n  },\n  {\n    type: 'section',\n    fields: [\n      {\n        type: 'mrkdwn',\n        text: `*Total Pages*\\n${summary.totalPages}`\n      },\n      {\n        type: 'mrkdwn',\n        text: `*Test Suites*\\n${testSuites?.length || 0}`\n      },\n      {\n        type: 'mrkdwn',\n        text: `*Duration*\\n${(duration / 1000).toFixed(1)}s`\n      },\n      {\n        type: 'mrkdwn', \n        text: `*Scanned At*\\n${new Date().toLocaleString()}`\n      }\n    ]\n  },\n  {\n    type: 'divider'\n  },\n  {\n    type: 'section',\n    text: {\n      type: 'mrkdwn',\n      text: `*Page Classification*\\n${pageBreakdown}`\n    }\n  },\n  {\n    type: 'divider'\n  },\n  {\n    type: 'section',\n    text: {\n      type: 'mrkdwn',\n      text: `*Generated Test Suites*\\n${suiteSummary}`\n    }\n  }\n];\n\nif (reportUrl) {\n  blocks.push({\n    type: 'actions',\n    elements: [\n      {\n        type: 'button',\n        text: {\n          type: 'plain_text',\n          text: ':page_facing_up: View Full Report',\n          emoji: true\n        },\n        url: reportUrl,\n        action_id: 'view_report'\n      }\n    ]\n  });\n}\n\nreturn [{\n  json: {\n    text: `QA Discovery Report: ${domain} - ${summary.totalPages} pages found`,\n    blocks\n  }\n}];"
+      },
+      "id": "format-message",
+      "name": "Format Slack Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "{{ $env.SLACK_QA_CHANNEL || 'qa-alerts' }}",
+          "mode": "name"
+        },
+        "text": "={{ $json.text }}",
+        "blocksUi": "={{ JSON.stringify($json.blocks) }}",
+        "otherOptions": {}
+      },
+      "id": "slack-send",
+      "name": "Send to Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [850, 300],
+      "credentials": {
+        "slackApi": {
+          "id": "SLACK_CREDENTIAL_ID",
+          "name": "Slack API"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "domain",
+              "name": "domain",
+              "value": "mercan.com",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "set-domain",
+      "name": "Set Domain",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [450, 500]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://38.97.60.181:3003/api/test/discover",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ domain: $json.domain, depth: 2, maxPages: 50 }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "discover-site-manual",
+      "name": "Discover Site (Manual)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [650, 500]
+    }
+  ],
+  "connections": {
+    "Daily 8 AM Trigger": {
+      "main": [
+        [
+          {
+            "node": "Discover Site",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discover Site": {
+      "main": [
+        [
+          {
+            "node": "Format Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Slack Message": {
+      "main": [
+        [
+          {
+            "node": "Send to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Domain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Domain": {
+      "main": [
+        [
+          {
+            "node": "Discover Site (Manual)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discover Site (Manual)": {
+      "main": [
+        [
+          {
+            "node": "Format Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "QA"
+    },
+    {
+      "name": "Discovery"
+    },
+    {
+      "name": "Slack"
+    }
+  ]
+}

@@ -143,9 +143,63 @@ class StorageClient {
       );
       return url;
     } catch (error) {
-      logger.error('Failed to generate presigned URL:', error);
+      logger.error('Failed to generate presigned URL:', error.message);
       throw error;
     }
+  }
+
+  /**
+   * Get public URL for a file (checks if exists first)
+   * @param {string} remotePath - Remote path in bucket
+   * @returns {Promise<string|null>} - Public URL or null if not found
+   */
+  async getFileUrl(remotePath) {
+    try {
+      // Check if file exists by getting its stats
+      await this.minioClient.statObject(this.bucketName, remotePath);
+      return `${this.publicUrl}/${this.bucketName}/${remotePath}`;
+    } catch (error) {
+      // File doesn't exist
+      if (error.code === 'NotFound' || error.message?.includes('Not Found')) {
+        return null;
+      }
+      logger.error('Failed to get file URL:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Download file from MinIO directly (bypasses public URL)
+   * @param {string} remotePath - Remote path in bucket
+   * @returns {Promise<Buffer>} - File buffer
+   */
+  async downloadFile(remotePath) {
+    return new Promise((resolve, reject) => {
+      const chunks = [];
+      this.minioClient.getObject(this.bucketName, remotePath, (error, stream) => {
+        if (error) {
+          logger.error('Failed to download file from MinIO:', error.message);
+          return reject(error);
+        }
+        stream.on('data', chunk => chunks.push(chunk));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+      });
+    });
+  }
+
+  /**
+   * Extract remote path from public URL
+   * @param {string} url - Public MinIO URL
+   * @returns {string|null} - Remote path or null if not a MinIO URL
+   */
+  extractRemotePath(url) {
+    const bucketPrefix = `/${this.bucketName}/`;
+    const urlPath = url.replace(/^https?:\/\/[^\/]+/, '');
+    if (urlPath.startsWith(bucketPrefix)) {
+      return urlPath.substring(bucketPrefix.length);
+    }
+    return null;
   }
 }
 

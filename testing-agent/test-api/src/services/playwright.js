@@ -2,8 +2,15 @@ const { chromium, firefox, webkit } = require('playwright');
 const path = require('path');
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
 const logger = require('../utils/logger');
 const storage = require('../utils/storage');
+
+/**
+ * Self-Healing Test Configuration
+ */
+const HEAL_ENDPOINT = process.env.HEAL_ENDPOINT || 'http://localhost:3003/api/heal';
+const ENABLE_SELF_HEALING = process.env.ENABLE_SELF_HEALING !== 'false';
 
 /**
  * Browser Pool for keeping warm browser instances
@@ -148,6 +155,197 @@ class PlaywrightService {
 
     const url = await storage.uploadFile(localPath, `screenshots/${filename}`, 'image/png');
     return url;
+  }
+
+  /**
+   * Self-Healing: Detect if error is a selector failure
+   * @param {Error} error - The caught error
+   * @returns {boolean} - True if this is a selector-related error
+   */
+  isSelectorError(error) {
+    const selectorErrorPatterns = [
+      'ElementHandle',
+      'Element is not attached',
+      'Element is not visible',
+      'Waiting for selector',
+      'No element found',
+      'locator resolved to',
+      'Timeout exceeded while waiting for selector',
+      'strict mode violation'
+    ];
+
+    const errorMessage = error.message || error.toString();
+    return selectorErrorPatterns.some(pattern => errorMessage.includes(pattern));
+  }
+
+  /**
+   * Self-Healing: Capture page context for AI analysis
+   * @param {Page} page - Playwright page
+   * @param {string} failedSelector - The selector that failed
+   * @param {Error} error - The error that occurred
+   * @returns {Promise<Object>} - Context data for healing
+   */
+  async captureHealingContext(page, failedSelector, error) {
+    try {
+      // Capture the current HTML body
+      const htmlBody = await page.content();
+
+      // Capture a screenshot at the moment of failure
+      const screenshotBuffer = await page.screenshot({ fullPage: false });
+      const screenshotBase64 = screenshotBuffer.toString('base64');
+
+      // Extract page metadata
+      const pageUrl = page.url();
+      const pageTitle = await page.title();
+
+      // Try to find similar elements that might be the new selector
+      const similarElements = await page.evaluate((selector) => {
+        const elements = [];
+
+        // Look for buttons with similar text
+        if (selector.includes('button') || selector.includes('btn')) {
+          document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]').forEach((el, idx) => {
+            if (idx < 10) {
+              elements.push({
+                tagName: el.tagName.toLowerCase(),
+                className: el.className,
+                id: el.id,
+                text: el.textContent?.trim().substring(0, 50),
+                type: el.type || null
+              });
+            }
+          });
+        }
+
+        // Look for input fields
+        if (selector.includes('input') || selector.includes('field')) {
+          document.querySelectorAll('input, textarea, select').forEach((el, idx) => {
+            if (idx < 10) {
+              elements.push({
+                tagName: el.tagName.toLowerCase(),
+                className: el.className,
+                id: el.id,
+                name: el.name,
+                type: el.type || null,
+                placeholder: el.placeholder || null
+              });
+            }
+          });
+        }
+
+        // Look for links
+        if (selector.includes('a') || selector.includes('link')) {
+          document.querySelectorAll('a').forEach((el, idx) => {
+            if (idx < 10) {
+              elements.push({
+                tagName: 'a',
+                className: el.className,
+                id: el.id,
+                href: el.href?.substring(0, 100),
+                text: el.textContent?.trim().substring(0, 50)
+              });
+            }
+          });
+        }
+
+        return elements;
+      }, failedSelector);
+
+      return {
+        failedSelector,
+        errorMessage: error.message,
+        errorType: error.name || 'Error',
+        pageUrl,
+        pageTitle,
+        htmlBody,
+        screenshotBase64,
+        similarElements,
+        capturedAt: new Date().toISOString()
+      };
+    } catch (captureError) {
+      logger.error('Failed to capture healing context:', captureError);
+      return {
+        failedSelector,
+        errorMessage: error.message,
+        errorType: error.name || 'Error',
+        captureError: captureError.message,
+        capturedAt: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
+   * Self-Healing: Send failure data to healing endpoint
+   * @param {Object} context - The healing context from captureHealingContext
+   * @param {Object} testMetadata - Additional test metadata
+   * @returns {Promise<Object|null>} - Suggested fix or null
+   */
+  async sendToHealingEndpoint(context, testMetadata = {}) {
+    if (!ENABLE_SELF_HEALING) {
+      logger.debug('Self-healing is disabled');
+      return null;
+    }
+
+    try {
+      logger.info('Sending selector failure to healing endpoint', {
+        selector: context.failedSelector,
+        url: context.pageUrl
+      });
+
+      const payload = {
+        event: 'selector_failure',
+        context,
+        testMetadata,
+        timestamp: new Date().toISOString()
+      };
+
+      const response = await axios.post(HEAL_ENDPOINT, payload, {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 30000
+      });
+
+      if (response.data?.suggestedSelector) {
+        logger.info('Received suggested selector fix:', response.data.suggestedSelector);
+        return response.data;
+      }
+
+      return null;
+    } catch (error) {
+      logger.warn('Failed to contact healing endpoint:', error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Self-Healing: Handle selector failure with automatic recovery attempt
+   * @param {Page} page - Playwright page
+   * @param {string} failedSelector - The selector that failed
+   * @param {Error} error - The original error
+   * @param {Object} testMetadata - Test context
+   * @returns {Promise<Object>} - Result with potential fix
+   */
+  async handleSelectorFailure(page, failedSelector, error, testMetadata = {}) {
+    logger.warn(`Selector failure detected: ${failedSelector}`, { error: error.message });
+
+    // Capture the full context
+    const context = await this.captureHealingContext(page, failedSelector, error);
+
+    // Send to healing endpoint for AI analysis
+    const healingResult = await this.sendToHealingEndpoint(context, testMetadata);
+
+    return {
+      originalSelector: failedSelector,
+      originalError: error.message,
+      healingContext: {
+        pageUrl: context.pageUrl,
+        pageTitle: context.pageTitle,
+        similarElements: context.similarElements,
+        capturedAt: context.capturedAt
+      },
+      suggestedFix: healingResult,
+      htmlCaptured: !!context.htmlBody,
+      screenshotCaptured: !!context.screenshotBase64
+    };
   }
 
   /**

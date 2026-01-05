@@ -12,6 +12,10 @@ const loadRoute = require('./routes/load');
 const pixelAuditRoute = require('./routes/pixel-audit');
 const visualRegressionRoute = require('./routes/visual-regression');
 const reportRoute = require('./routes/report');
+const discoveryRoute = require('./routes/discovery');
+const healRoute = require('./routes/heal');
+const queueRoute = require('./routes/queue');
+const queueService = require('./services/queue');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -58,6 +62,13 @@ app.use('/api/test/load', loadRoute);
 app.use('/api/test/pixel-audit', pixelAuditRoute);
 app.use('/api/test/visual-regression', visualRegressionRoute);
 app.use('/api/test/report', reportRoute);
+app.use('/api/test/discover', discoveryRoute);
+
+// Self-healing route
+app.use('/api/heal', healRoute);
+
+// Queue management route
+app.use('/api/queue', queueRoute);
 
 // 404 handler
 app.use((req, res) => {
@@ -82,6 +93,18 @@ app.use((err, req, res, next) => {
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
+
+// Initialize queue service (if Redis available)
+try {
+  if (process.env.REDIS_HOST) {
+    queueService.initializeQueues();
+    logger.info('Queue service initialized');
+  } else {
+    logger.warn('REDIS_HOST not configured - queue service disabled');
+  }
+} catch (error) {
+  logger.warn('Queue service not available:', error.message);
+}
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {

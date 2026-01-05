@@ -61,10 +61,21 @@ class VisualRegressionService {
 
   /**
    * Download image from URL to local path
+   * Uses internal MinIO client for MinIO URLs, HTTP for external URLs
    * @param {string} url - Image URL
    * @param {string} localPath - Local file path
    */
   async downloadImage(url, localPath) {
+    // Try to extract remote path from MinIO URL and download internally
+    const remotePath = storage.extractRemotePath(url);
+    if (remotePath) {
+      logger.info(`Downloading from MinIO internally: ${remotePath}`);
+      const buffer = await storage.downloadFile(remotePath);
+      await fs.writeFile(localPath, buffer);
+      return;
+    }
+
+    // Fallback to HTTP download for external URLs
     const axios = require('axios');
     const response = await axios.get(url, { responseType: 'arraybuffer' });
     await fs.writeFile(localPath, response.data);

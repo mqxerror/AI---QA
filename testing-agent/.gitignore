@@ -37,3 +37,9 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+
+# Files with secrets
+DEPLOYMENT_COMPLETE.md
+WORKFLOWS_IMPORTED_SUCCESS.md
+n8n-workflows/QUICK_REFERENCE.md
+SERVER_INFRASTRUCTURE_REFERENCE.md
