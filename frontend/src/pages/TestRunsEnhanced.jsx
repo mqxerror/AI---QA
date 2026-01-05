@@ -8,7 +8,7 @@ import {
   FadeText
 } from '../components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
-import TestRunSidePanel from '../components/TestRunSidePanel';
+import TestDetailsPanel from '../components/TestDetailsPanel';
 import './TestRunsEnhanced.css';
 
 export default function TestRunsEnhanced() {
@@ -748,8 +748,8 @@ export default function TestRunsEnhanced() {
         )}
       </div>
 
-      {/* Side Panel for all test types */}
-      <TestRunSidePanel
+      {/* Optimized Test Details Panel with 4 Tabs */}
+      <TestDetailsPanel
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         testRunId={selectedTestRunId}
