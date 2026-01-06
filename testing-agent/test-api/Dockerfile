@@ -60,7 +60,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm install --omit=dev
 
 # Install Playwright browsers
 RUN npx playwright install chromium firefox webkit --with-deps
