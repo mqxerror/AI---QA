@@ -238,16 +238,38 @@ class SchedulerService {
    */
   async sendAlert(websiteId, testType, data) {
     const db = require('../utils/database');
+    const alertService = require('./alerts');
 
-    // Get website and org info
+    // Get website info
     const website = await db.get('SELECT * FROM websites WHERE id = ?', [websiteId]);
+    const websiteUrl = website?.url || 'Unknown';
 
     // Log alert
-    logger.warn(`Alert for ${website?.url}: ${testType} issues detected`, data);
+    logger.warn(`Alert for ${websiteUrl}: ${testType} issues detected`, data);
 
-    // TODO: Implement email/Slack alerts
-    // const alertService = require('./alerts');
-    // await alertService.send(websiteId, testType, data);
+    // Send alert via alert service
+    try {
+      if (Array.isArray(data) && data.length > 0) {
+        // Test failures
+        await alertService.testFailure(websiteId, websiteUrl, testType, data);
+      } else if (data.performance !== undefined || data.seo !== undefined) {
+        // Lighthouse results
+        await alertService.performanceDegradation(websiteId, websiteUrl, data, {});
+      } else if (data.error) {
+        // Error alert
+        await alertService.sendAlert({
+          type: 'scheduled_test_failed',
+          severity: 'error',
+          websiteId,
+          websiteUrl,
+          title: `${testType} Test Failed`,
+          message: data.error,
+          data
+        });
+      }
+    } catch (alertError) {
+      logger.error('Failed to send alert:', alertError);
+    }
   }
 
   /**

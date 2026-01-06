@@ -1,11 +1,20 @@
 const Queue = require('bull');
+const { createBullBoard } = require('@bull-board/api');
+const { BullAdapter } = require('@bull-board/api/bullAdapter');
+const { ExpressAdapter } = require('@bull-board/express');
 const logger = require('../utils/logger');
 
 /**
  * Test Queue Service
  * Handles long-running tests (Discovery, Load Tests, Full Suites) via Redis/Bull
  * Prevents API timeouts and enables parallel test execution
+ *
+ * Task: A1.4 - Bull Board monitoring
  */
+
+// Bull Board adapter (exported for use in main app)
+const serverAdapter = new ExpressAdapter();
+serverAdapter.setBasePath('/api/admin/queues');
 
 // Redis configuration
 const REDIS_CONFIG = {
@@ -59,8 +68,20 @@ function initializeQueues() {
     });
   });
 
-  logger.info('Test queues initialized', {
-    queues: Object.keys(queues)
+  // Set up Bull Board with all queues
+  createBullBoard({
+    queues: [
+      new BullAdapter(queues.discovery),
+      new BullAdapter(queues.loadTest),
+      new BullAdapter(queues.fullSuite),
+      new BullAdapter(queues.visualRegression)
+    ],
+    serverAdapter
+  });
+
+  logger.info('Test queues initialized with Bull Board', {
+    queues: Object.keys(queues),
+    bullBoardPath: '/api/admin/queues'
   });
 
   return queues;
@@ -309,5 +330,6 @@ module.exports = {
   processVisualRegressionJobs,
   cleanOldJobs,
   shutdown,
-  queues
+  queues,
+  serverAdapter // Bull Board adapter for mounting in Express
 };

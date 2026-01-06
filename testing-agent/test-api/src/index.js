@@ -16,6 +16,7 @@ const discoveryRoute = require('./routes/discovery');
 const healRoute = require('./routes/heal');
 const queueRoute = require('./routes/queue');
 const schedulerRoute = require('./routes/scheduler');
+const alertsRoute = require('./routes/alerts');
 const queueService = require('./services/queue');
 const schedulerService = require('./services/scheduler');
 
@@ -75,6 +76,9 @@ app.use('/api/queue', queueRoute);
 // Scheduler route
 app.use('/api/scheduler', schedulerRoute);
 
+// Alerts route
+app.use('/api/alerts', alertsRoute);
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
@@ -103,7 +107,9 @@ app.use((err, req, res, next) => {
 try {
   if (process.env.REDIS_HOST) {
     queueService.initializeQueues();
-    logger.info('Queue service initialized');
+    // Mount Bull Board dashboard at /api/admin/queues
+    app.use('/api/admin/queues', queueService.serverAdapter.getRouter());
+    logger.info('Queue service initialized with Bull Board at /api/admin/queues');
   } else {
     logger.warn('REDIS_HOST not configured - queue service disabled');
   }

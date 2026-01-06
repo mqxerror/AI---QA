@@ -19,6 +19,8 @@
   "author": "Wassim / PixelCraftedMedia",
   "license": "MIT",
   "dependencies": {
+    "@bull-board/api": "^5.10.0",
+    "@bull-board/express": "^5.10.0",
     "@playwright/test": "^1.40.0",
     "axios": "^1.6.2",
     "bull": "^4.12.0",
