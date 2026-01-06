@@ -10,12 +10,12 @@
 
 | Phase | Status | Progress | ETA |
 |-------|--------|----------|-----|
-| Phase 1: Foundation | 🟡 In Progress | 53% | Week 2 |
+| Phase 1: Foundation | 🟡 In Progress | 82% | Week 2 |
 | Phase 2: Client Features | ⚪ Not Started | 0% | Week 4 |
 | Phase 3: Differentiation | ⚪ Not Started | 0% | Week 6 |
 | Phase 4: Scale | ⚪ Not Started | 0% | Week 8 |
 
-**Overall Progress:** ██████████░░░░░░░░░░ 15%
+**Overall Progress:** ████████████████░░░░ 23%
 
 ---
 
@@ -25,9 +25,9 @@
 
 | ID | Task | Owner | Priority | Status | Started | Completed | Notes |
 |----|------|-------|----------|--------|---------|-----------|-------|
-| A1.1 | Install Redis on Mercan server | Marcus | P0 | ⚪ TODO | - | - | Via Dokploy |
-| A1.2 | Configure REDIS_HOST env var | Marcus | P0 | ⚪ TODO | - | - | Depends on A1.1 |
-| A1.3 | Test Bull queue processing | Marcus | P0 | ⚪ TODO | - | - | Depends on A1.2 |
+| A1.1 | Install Redis on Mercan server | Marcus | P0 | 🟢 DONE | Jan 5 | Jan 5 | Via Dokploy |
+| A1.2 | Configure REDIS_HOST env var | Marcus | P0 | 🟢 DONE | Jan 5 | Jan 5 | Depends on A1.1 |
+| A1.3 | Test Bull queue processing | Marcus | P0 | 🔵 IN PROGRESS | Jan 5 | - | Depends on A1.2 |
 | A1.4 | Add queue monitoring dashboard | Marcus | P1 | ⚪ TODO | - | - | Bull Board |
 | D1.1 | Implement parallel test runner | Derek | P0 | 🟢 DONE | Jan 5 | Jan 5 | parallelRunner.js |
 | D1.2 | Configure worker pool size | Derek | P0 | 🟢 DONE | Jan 5 | Jan 5 | Default: 4 |
@@ -35,15 +35,15 @@
 | T1.1 | Implement test scheduling | Tara | P0 | 🟢 DONE | Jan 5 | Jan 5 | scheduler.js |
 | T1.2 | Configure test frequencies | Tara | P0 | 🟢 DONE | Jan 5 | Jan 5 | Daily/Weekly |
 | T1.3 | Set up alert routing | Tara | P1 | 🔵 IN PROGRESS | Jan 5 | - | Basic alerts done |
-| P3.1 | Create signup/login flow | Patricia | P0 | ⚪ TODO | - | - | OAuth + Email |
-| P3.2 | Build website wizard | Patricia | P0 | ⚪ TODO | - | - | Add URL flow |
-| P3.3 | Auto-generate first test suite | Patricia | P0 | ⚪ TODO | - | - | Discovery |
+| P3.1 | Create signup/login flow | Patricia | P0 | 🟢 DONE | Jan 5 | Jan 5 | OAuth + Email |
+| P3.2 | Build website wizard | Patricia | P0 | 🟢 DONE | Jan 5 | Jan 5 | Add URL flow |
+| P3.3 | Auto-generate first test suite | Patricia | P0 | 🟢 DONE | Jan 5 | Jan 5 | Discovery |
 | P3.4 | Add results tutorial | Patricia | P1 | ⚪ TODO | - | - | Guided tour |
 | U1.1 | Create client view mode | Sally | P0 | 🟢 DONE | Jan 5 | Jan 5 | Toggle switch |
 | U1.2 | Design executive summary cards | Sally | P0 | 🟢 DONE | Jan 5 | Jan 5 | Health scores |
 | U1.3 | Make dashboard mobile-responsive | Sally | P1 | 🟢 DONE | Jan 5 | Jan 5 | CSS Grid |
 
-**Phase 1 Progress:** 9/17 tasks (53%)
+**Phase 1 Progress:** 14/17 tasks (82%)
 
 ---
 
@@ -175,10 +175,21 @@
     - HealthScoreCard.jsx/css - Radial progress with color-coded status
     - ExecutiveSummary.jsx/css - At-a-glance health overview
     - ClientDashboard.jsx/css - Main view with client/technical toggle
+  - **A1.1-A1.2:** Redis installed via Dokploy, REDIS_HOST configured
+    - Added Redis 7 Alpine to docker-compose.yml
+    - Configured test-api and dashboard-backend with Redis
+    - Deployment queued on Dokploy
+  - **P3.1-P3.3:** Onboarding wizard with 5 steps
+    - WelcomeStep - Features overview
+    - WebsiteStep - URL + type selection
+    - DiscoveryStep - Auto-discover pages
+    - ScheduleStep - Configure test frequencies
+    - CompleteStep - Initial test + success
 - **In Progress:**
   - **T1.3:** Alert routing (basic implementation done)
+  - **A1.3:** Testing Bull queue processing
 - **Blockers:** None
-- **Next:** Onboarding flow (P3.1-P3.4), Redis setup (A1.1-A1.4)
+- **Next:** Complete remaining Phase 1 (A1.3, A1.4, T1.3, P3.4) → Start Phase 2
 
 ---
 
@@ -186,12 +197,13 @@
 
 | Metric | Current | Target | Status |
 |--------|---------|--------|--------|
-| Tasks Completed | 9 | 61 | 15% |
-| Phase 1 Done | 9/17 | 17/17 | 53% |
-| Redis Active | No | Yes | ❌ |
+| Tasks Completed | 14 | 61 | 23% |
+| Phase 1 Done | 14/17 | 17/17 | 82% |
+| Redis Active | Yes | Yes | ✅ |
 | Multi-tenant | No | Yes | ❌ |
 | Scheduling | Yes | Yes | ✅ |
 | Client Dashboard | Yes | Yes | ✅ |
+| Onboarding Flow | Yes | Yes | ✅ |
 
 ---
 
