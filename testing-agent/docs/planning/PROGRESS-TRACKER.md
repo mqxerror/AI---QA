@@ -10,12 +10,12 @@
 
 | Phase | Status | Progress | ETA |
 |-------|--------|----------|-----|
-| Phase 1: Foundation | 🟡 In Progress | 35% | Week 2 |
+| Phase 1: Foundation | 🟡 In Progress | 53% | Week 2 |
 | Phase 2: Client Features | ⚪ Not Started | 0% | Week 4 |
 | Phase 3: Differentiation | ⚪ Not Started | 0% | Week 6 |
 | Phase 4: Scale | ⚪ Not Started | 0% | Week 8 |
 
-**Overall Progress:** ██████░░░░░░░░░░░░░░ 10%
+**Overall Progress:** ██████████░░░░░░░░░░ 15%
 
 ---
 
@@ -39,11 +39,11 @@
 | P3.2 | Build website wizard | Patricia | P0 | ⚪ TODO | - | - | Add URL flow |
 | P3.3 | Auto-generate first test suite | Patricia | P0 | ⚪ TODO | - | - | Discovery |
 | P3.4 | Add results tutorial | Patricia | P1 | ⚪ TODO | - | - | Guided tour |
-| U1.1 | Create client view mode | Sally | P0 | ⚪ TODO | - | - | Toggle switch |
-| U1.2 | Design executive summary cards | Sally | P0 | ⚪ TODO | - | - | Health scores |
-| U1.3 | Make dashboard mobile-responsive | Sally | P1 | ⚪ TODO | - | - | CSS Grid |
+| U1.1 | Create client view mode | Sally | P0 | 🟢 DONE | Jan 5 | Jan 5 | Toggle switch |
+| U1.2 | Design executive summary cards | Sally | P0 | 🟢 DONE | Jan 5 | Jan 5 | Health scores |
+| U1.3 | Make dashboard mobile-responsive | Sally | P1 | 🟢 DONE | Jan 5 | Jan 5 | CSS Grid |
 
-**Phase 1 Progress:** 6/17 tasks (35%)
+**Phase 1 Progress:** 9/17 tasks (53%)
 
 ---
 
@@ -171,10 +171,14 @@
   - Defined all phases and tasks (61 total)
   - **D1.1-D1.3:** Parallel test runner with progress tracking
   - **T1.1-T1.2:** Test scheduler with cron support
+  - **U1.1-U1.3:** Client dashboard with view toggle, health cards, mobile responsive
+    - HealthScoreCard.jsx/css - Radial progress with color-coded status
+    - ExecutiveSummary.jsx/css - At-a-glance health overview
+    - ClientDashboard.jsx/css - Main view with client/technical toggle
 - **In Progress:**
   - **T1.3:** Alert routing (basic implementation done)
 - **Blockers:** None
-- **Next:** Client dashboard, onboarding flow, Redis setup
+- **Next:** Onboarding flow (P3.1-P3.4), Redis setup (A1.1-A1.4)
 
 ---
 
@@ -182,12 +186,12 @@
 
 | Metric | Current | Target | Status |
 |--------|---------|--------|--------|
-| Tasks Completed | 6 | 61 | 10% |
-| Phase 1 Done | 6/17 | 17/17 | 35% |
+| Tasks Completed | 9 | 61 | 15% |
+| Phase 1 Done | 9/17 | 17/17 | 53% |
 | Redis Active | No | Yes | ❌ |
 | Multi-tenant | No | Yes | ❌ |
 | Scheduling | Yes | Yes | ✅ |
-| Client Dashboard | No | Yes | ❌ |
+| Client Dashboard | Yes | Yes | ✅ |
 
 ---
 
