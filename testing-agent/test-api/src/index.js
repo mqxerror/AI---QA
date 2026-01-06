@@ -15,7 +15,9 @@ const reportRoute = require('./routes/report');
 const discoveryRoute = require('./routes/discovery');
 const healRoute = require('./routes/heal');
 const queueRoute = require('./routes/queue');
+const schedulerRoute = require('./routes/scheduler');
 const queueService = require('./services/queue');
+const schedulerService = require('./services/scheduler');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -69,6 +71,9 @@ app.use('/api/heal', healRoute);
 
 // Queue management route
 app.use('/api/queue', queueRoute);
+
+// Scheduler route
+app.use('/api/scheduler', schedulerRoute);
 
 // 404 handler
 app.use((req, res) => {
