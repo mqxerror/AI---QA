@@ -79,6 +79,20 @@ app.use('/api/scheduler', schedulerRoute);
 // Alerts route
 app.use('/api/alerts', alertsRoute);
 
+// Initialize queue service (if Redis available) - MUST be before 404 handler
+try {
+  if (process.env.REDIS_HOST) {
+    queueService.initializeQueues();
+    // Mount Bull Board dashboard at /api/admin/queues
+    app.use('/api/admin/queues', queueService.serverAdapter.getRouter());
+    logger.info('Queue service initialized with Bull Board at /api/admin/queues');
+  } else {
+    logger.warn('REDIS_HOST not configured - queue service disabled');
+  }
+} catch (error) {
+  logger.warn('Queue service not available:', error.message);
+}
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
@@ -102,20 +116,6 @@ app.use((err, req, res, next) => {
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
-
-// Initialize queue service (if Redis available)
-try {
-  if (process.env.REDIS_HOST) {
-    queueService.initializeQueues();
-    // Mount Bull Board dashboard at /api/admin/queues
-    app.use('/api/admin/queues', queueService.serverAdapter.getRouter());
-    logger.info('Queue service initialized with Bull Board at /api/admin/queues');
-  } else {
-    logger.warn('REDIS_HOST not configured - queue service disabled');
-  }
-} catch (error) {
-  logger.warn('Queue service not available:', error.message);
-}
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
