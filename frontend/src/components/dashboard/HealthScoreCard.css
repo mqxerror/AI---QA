@@ -1,0 +1,239 @@
+/**
+ * HealthScoreCard Styles
+ * Color-coded health score display with radial progress
+ *
+ * Task: U1.2
+ * Owner: Sally (UX Designer)
+ */
+
+.health-score-card {
+  background: var(--card-bg, #1a1a2e);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  transition: all 0.3s ease;
+}
+
+.health-score-card--clickable {
+  cursor: pointer;
+}
+
+.health-score-card--clickable:hover {
+  border-color: var(--accent-color, #00d9ff);
+  box-shadow: 0 8px 32px rgba(0, 217, 255, 0.15);
+}
+
+/* Size Variants */
+.health-score-card--small {
+  padding: 16px;
+  gap: 12px;
+}
+
+.health-score-card--small .health-score-card__score-container {
+  width: 80px;
+  height: 80px;
+}
+
+.health-score-card--small .health-score-card__number {
+  font-size: 1.5rem;
+}
+
+.health-score-card--medium .health-score-card__score-container {
+  width: 120px;
+  height: 120px;
+}
+
+.health-score-card--large {
+  padding: 32px;
+  gap: 20px;
+}
+
+.health-score-card--large .health-score-card__score-container {
+  width: 160px;
+  height: 160px;
+}
+
+.health-score-card--large .health-score-card__number {
+  font-size: 3rem;
+}
+
+/* Score Container */
+.health-score-card__score-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.health-score-card__ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.health-score-card__ring-bg {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.health-score-card__ring-progress {
+  transition: stroke-dasharray 0.8s ease-out, stroke 0.3s ease;
+}
+
+/* Status Colors */
+.health-score-card--excellent .health-score-card__ring-progress {
+  stroke: #00ff88;
+}
+
+.health-score-card--excellent .health-score-card__score-value {
+  color: #00ff88;
+}
+
+.health-score-card--good .health-score-card__ring-progress {
+  stroke: #00d9ff;
+}
+
+.health-score-card--good .health-score-card__score-value {
+  color: #00d9ff;
+}
+
+.health-score-card--warning .health-score-card__ring-progress {
+  stroke: #ffaa00;
+}
+
+.health-score-card--warning .health-score-card__score-value {
+  color: #ffaa00;
+}
+
+.health-score-card--critical .health-score-card__ring-progress {
+  stroke: #ff4466;
+}
+
+.health-score-card--critical .health-score-card__score-value {
+  color: #ff4466;
+}
+
+/* Score Value */
+.health-score-card__score-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.health-score-card__number {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.health-score-card__status-icon {
+  font-size: 0.875rem;
+  opacity: 0.8;
+}
+
+/* Label */
+.health-score-card__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.health-score-card__icon {
+  font-size: 1rem;
+}
+
+.health-score-card__text {
+  white-space: nowrap;
+}
+
+/* Trend Indicator */
+.health-score-card__trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.health-score-card__trend.trend-up {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+}
+
+.health-score-card__trend.trend-down {
+  color: #ff4466;
+  background: rgba(255, 68, 102, 0.1);
+}
+
+.health-score-card__trend.trend-neutral {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.health-score-card__trend-icon {
+  font-size: 0.875rem;
+}
+
+.health-score-card__trend-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.health-score-card__trend-label {
+  opacity: 0.7;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* Glow Effects */
+.health-score-card--excellent {
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.05);
+}
+
+.health-score-card--critical {
+  box-shadow: 0 0 20px rgba(255, 68, 102, 0.1);
+  animation: pulse-critical 2s ease-in-out infinite;
+}
+
+@keyframes pulse-critical {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 68, 102, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 68, 102, 0.2);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .health-score-card {
+    padding: 16px;
+  }
+
+  .health-score-card--medium .health-score-card__score-container {
+    width: 100px;
+    height: 100px;
+  }
+
+  .health-score-card__number {
+    font-size: 1.75rem;
+  }
+
+  .health-score-card__label {
+    font-size: 0.75rem;
+  }
+}

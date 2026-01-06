@@ -1,0 +1,398 @@
+/**
+ * ClientDashboard Styles
+ * Main client-facing dashboard layout
+ *
+ * Task: U1.1, U1.2, U1.3
+ * Owner: Sally (UX Designer)
+ */
+
+.client-dashboard {
+  min-height: 100vh;
+  background: var(--bg-primary, #0a0a14);
+  padding: 24px;
+  color: var(--text-primary, #ffffff);
+}
+
+/* Header */
+.client-dashboard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.client-dashboard__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.client-dashboard__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+}
+
+.client-dashboard__website-id {
+  font-size: 0.75rem;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  font-family: monospace;
+}
+
+/* View Toggle */
+.client-dashboard__view-toggle {
+  display: flex;
+  background: var(--surface-bg, #1a1a2e);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.client-dashboard__toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.client-dashboard__toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.client-dashboard__toggle-btn.active {
+  background: var(--accent-color, #00d9ff);
+  color: #0a0a14;
+  box-shadow: 0 2px 8px rgba(0, 217, 255, 0.3);
+}
+
+.toggle-icon {
+  font-size: 1rem;
+}
+
+.toggle-label {
+  white-space: nowrap;
+}
+
+/* Refresh Button */
+.client-dashboard__refresh-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  background: var(--surface-bg, #1a1a2e);
+  border-radius: 8px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.client-dashboard__refresh-btn:hover:not(:disabled) {
+  border-color: var(--accent-color, #00d9ff);
+  color: var(--accent-color, #00d9ff);
+}
+
+.client-dashboard__refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Content */
+.client-dashboard__content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.client-dashboard__placeholder {
+  padding: 48px;
+  text-align: center;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  background: var(--surface-bg, #0d0d1a);
+  border-radius: 16px;
+  border: 1px dashed var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+/* Section Titles */
+.client-dashboard__section-title {
+  margin: 0 0 16px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+}
+
+/* Activity List */
+.client-dashboard__activity {
+  background: var(--surface-bg, #0d0d1a);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.client-dashboard__activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.client-dashboard__activity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.client-dashboard__activity-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.client-dashboard__activity-status {
+  font-size: 1rem;
+  width: 24px;
+  text-align: center;
+}
+
+.client-dashboard__activity-status.status--success {
+  color: #00ff88;
+}
+
+.client-dashboard__activity-status.status--error {
+  color: #ff4466;
+}
+
+.client-dashboard__activity-status.status--warning {
+  color: #ffaa00;
+}
+
+.client-dashboard__activity-status.status--neutral {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.client-dashboard__activity-type {
+  font-weight: 500;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  min-width: 120px;
+}
+
+.client-dashboard__activity-message {
+  flex: 1;
+  color: var(--text-primary, #ffffff);
+}
+
+.client-dashboard__activity-time {
+  font-size: 0.75rem;
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  white-space: nowrap;
+}
+
+.client-dashboard__empty {
+  color: var(--text-tertiary, rgba(255, 255, 255, 0.5));
+  text-align: center;
+  padding: 24px;
+  margin: 0;
+}
+
+/* Schedule List */
+.client-dashboard__schedule {
+  background: var(--surface-bg, #0d0d1a);
+  border-radius: 16px;
+  padding: 24px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.client-dashboard__schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.client-dashboard__schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+}
+
+.schedule-icon {
+  font-size: 1.25rem;
+}
+
+.schedule-type {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text-primary, #ffffff);
+}
+
+.schedule-time {
+  font-size: 0.875rem;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+}
+
+/* Modal */
+.client-dashboard__modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+}
+
+.client-dashboard__modal {
+  background: var(--surface-bg, #1a1a2e);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: hidden;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.client-dashboard__modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+}
+
+.client-dashboard__modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.client-dashboard__modal-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.client-dashboard__modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary, #ffffff);
+}
+
+.client-dashboard__modal-content {
+  padding: 24px;
+  overflow-y: auto;
+  max-height: calc(80vh - 72px);
+}
+
+/* Responsive - Mobile First (U1.3) */
+@media (max-width: 768px) {
+  .client-dashboard {
+    padding: 16px;
+  }
+
+  .client-dashboard__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .client-dashboard__info {
+    text-align: center;
+  }
+
+  .client-dashboard__view-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .client-dashboard__toggle-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .client-dashboard__refresh-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+
+  .client-dashboard__activity-item {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .client-dashboard__activity-type {
+    min-width: auto;
+  }
+
+  .client-dashboard__activity-message {
+    width: 100%;
+    order: 5;
+    padding-left: 36px;
+    font-size: 0.875rem;
+  }
+
+  .client-dashboard__activity-time {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .toggle-label {
+    display: none;
+  }
+
+  .client-dashboard__toggle-btn {
+    padding: 10px 12px;
+  }
+
+  .toggle-icon {
+    font-size: 1.25rem;
+  }
+
+  .client-dashboard__schedule-item {
+    flex-wrap: wrap;
+  }
+
+  .schedule-time {
+    width: 100%;
+    padding-left: 36px;
+    margin-top: 4px;
+  }
+}
+
+/* Dark Mode Variables (default) */
+.client-dashboard {
+  --bg-primary: #0a0a14;
+  --surface-bg: #0d0d1a;
+  --card-bg: #1a1a2e;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.5);
+  --accent-color: #00d9ff;
+}
