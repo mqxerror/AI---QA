@@ -1,6 +1,24 @@
 version: '3.8'
 
 services:
+  # Redis for Bull Queue
+  redis:
+    image: redis:7-alpine
+    container_name: qa-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - qa-network
+
   # Test Execution API (Playwright, k6, Lighthouse)
   test-api:
     build: ./test-api
@@ -10,6 +28,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - MINIO_ENDPOINT=minio
       - MINIO_PORT=9000
       - MINIO_USE_SSL=false
@@ -21,7 +41,9 @@ services:
     volumes:
       - test-artifacts:/app/artifacts
     depends_on:
-      - minio
+      redis:
+        condition: service_healthy
+      minio:
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/api/health"]
       interval: 30s
@@ -65,6 +87,8 @@ services:
       - NODE_ENV=production
       - TEST_API_URL=http://test-api:3001
       - MINIO_URL=http://minio:9000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - DATABASE_PATH=/app/database/qa-tests.db
       - JWT_SECRET=${JWT_SECRET:-change-this-secret-key-in-production}
       - JWT_EXPIRES_IN=7d
@@ -76,6 +100,8 @@ services:
       - qa-reports:/app/reports
       - qa-screenshots:/app/screenshots
     depends_on:
+      redis:
+        condition: service_healthy
       test-api:
         condition: service_healthy
     healthcheck:
@@ -121,4 +147,6 @@ volumes:
   test-artifacts:
     driver: local
   minio-data:
+    driver: local
+  redis-data:
     driver: local
