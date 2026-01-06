@@ -14,6 +14,7 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import { JsonView, allExpanded, darkStyles, defaultStyles } from 'react-json-view-lite';
 import 'react-json-view-lite/dist/index.css';
 import { Sheet } from './ui/Sheet';
+import { ResultsTutorial } from './tutorial';
 import { getTestRun, generateReport, runSmokeTest, runPerformanceTest } from '../services/api';
 import './TestDetailsPanel.css';
 
@@ -631,7 +632,8 @@ function PanelHeader({ runDetails, onClose, onRefresh, onRetest, isLoading, isRe
           </div>
         </div>
       </div>
-      <div className="header-actions">
+      <div className="header-actions" data-tutorial="action-buttons">
+        <ResultsTutorial />
         <button
           className="retest-btn"
           onClick={onRetest}
@@ -710,7 +712,7 @@ export default function TestDetailsPanel({ isOpen, onClose, testRunId, initialDa
 
           {/* Tab Navigation */}
           <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="tabs-root">
-            <Tabs.List className="tabs-list">
+            <Tabs.List className="tabs-list" data-tutorial="overview-tab">
               <Tabs.Trigger value="overview" className="tab-trigger">
                 <Gauge size={14} />
                 Overview
@@ -729,8 +731,8 @@ export default function TestDetailsPanel({ isOpen, onClose, testRunId, initialDa
               </Tabs.Trigger>
             </Tabs.List>
 
-            <div className="tabs-content-wrapper">
-              <Tabs.Content value="overview" className="tab-content">
+            <div className="tabs-content-wrapper" data-tutorial="results-list">
+              <Tabs.Content value="overview" className="tab-content" data-tutorial="score-display">
                 <OverviewTab runDetails={runDetails} />
               </Tabs.Content>
               <Tabs.Content value="logs" className="tab-content">

@@ -1,0 +1,327 @@
+/**
+ * Results Tutorial Styles
+ * Guided tour overlay and tooltip styling
+ */
+
+/* Tutorial Trigger Button */
+.tutorial-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 8px;
+  color: #818cf8;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tutorial-trigger-btn:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.tutorial-trigger-btn svg {
+  opacity: 0.9;
+}
+
+/* Tutorial Overlay */
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+}
+
+/* Spotlight Effect */
+.tutorial-spotlight {
+  position: fixed;
+  z-index: 9999;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 4px rgba(99, 102, 241, 0.5),
+    0 0 0 9999px rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.tutorial-spotlight-pulse {
+  position: absolute;
+  inset: -4px;
+  border: 2px solid rgba(99, 102, 241, 0.8);
+  border-radius: 12px;
+  animation: spotlight-pulse 2s ease-in-out infinite;
+}
+
+@keyframes spotlight-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.02);
+  }
+}
+
+/* Tutorial Tooltip */
+.tutorial-tooltip {
+  position: fixed;
+  z-index: 10000;
+  width: 340px;
+  background: linear-gradient(135deg, #1e1e2e, #2a2a3e);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 0 60px rgba(99, 102, 241, 0.1);
+}
+
+.tutorial-tooltip.centered {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.tutorial-tooltip.bottom {
+  top: calc(100% + 16px);
+}
+
+.tutorial-tooltip.top {
+  bottom: calc(100% + 16px);
+}
+
+.tutorial-tooltip.left {
+  right: calc(100% + 16px);
+}
+
+.tutorial-tooltip.right {
+  left: calc(100% + 16px);
+}
+
+/* Tooltip Arrow */
+.tutorial-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #1e1e2e;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  transform: rotate(45deg);
+}
+
+.tutorial-tooltip.bottom::before {
+  top: -7px;
+  left: 50%;
+  margin-left: -6px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.tutorial-tooltip.top::before {
+  bottom: -7px;
+  left: 50%;
+  margin-left: -6px;
+  border-left: none;
+  border-top: none;
+}
+
+.tutorial-tooltip.left::before {
+  right: -7px;
+  top: 50%;
+  margin-top: -6px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.tutorial-tooltip.right::before {
+  left: -7px;
+  top: 50%;
+  margin-top: -6px;
+  border-right: none;
+  border-top: none;
+}
+
+.tutorial-tooltip.centered::before {
+  display: none;
+}
+
+/* Tooltip Header */
+.tutorial-tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tutorial-tooltip-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+  border-radius: 10px;
+  color: #818cf8;
+}
+
+.tutorial-tooltip-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.tutorial-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tutorial-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+}
+
+/* Tooltip Content */
+.tutorial-tooltip-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #94a3b8;
+  margin: 0 0 16px 0;
+}
+
+/* Tooltip Footer */
+.tutorial-tooltip-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+/* Progress Dots */
+.tutorial-progress {
+  display: flex;
+  gap: 6px;
+}
+
+.tutorial-progress-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: all 0.2s ease;
+}
+
+.tutorial-progress-dot.active {
+  background: #818cf8;
+  transform: scale(1.2);
+}
+
+.tutorial-progress-dot.completed {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* Navigation Buttons */
+.tutorial-nav-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.tutorial-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tutorial-nav-btn.prev {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+}
+
+.tutorial-nav-btn.prev:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+}
+
+.tutorial-nav-btn.next {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+}
+
+.tutorial-nav-btn.next:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+/* Skip Link */
+.tutorial-skip-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 8px;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.tutorial-skip-link:hover {
+  color: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tutorial-tooltip {
+    width: calc(100vw - 32px);
+    max-width: 340px;
+    left: 16px !important;
+    right: 16px !important;
+  }
+
+  .tutorial-tooltip.centered {
+    left: 50% !important;
+    right: auto !important;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Animation for tooltip appearance */
+@keyframes tooltip-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.tutorial-tooltip.centered {
+  animation: tooltip-float 3s ease-in-out infinite;
+}
